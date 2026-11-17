@@ -1,0 +1,55 @@
+# Content — featured projects
+
+`content/projects.ts` is the single source of truth. This file holds the seed data and asset specs. Pitches below are drafts — Sam corrects them.
+
+## Schema (lib/schema.ts)
+```ts
+Project {
+  id: string            // kebab-case, stable
+  title: string
+  pitch: string         // one line, ≤ 90 chars
+  bullets: [string, string, string]  // impact, ≤ 110 chars each
+  skills: string[]      // e.g. "RAG", "LangGraph", "Computer Vision"
+  tags: string[]        // e.g. "agents", "edtech", "safety"
+  status: 'live' | 'video' | 'coming-soon'
+  visibility: 'public' | 'private' | 'team'
+  team?: { name: string; role: string }   // for team projects
+  links: { demo?: url; repo?: url; video?: url }
+  stack: string[]
+  assets: { poster: string; screenshots: string[] }
+  order: number         // ring position
+}
+```
+
+## Seed data (8 featured)
+| order | id | title | visibility | draft pitch | skills |
+|---|---|---|---|---|---|
+| 1 | software-factory | Software Factory | private | A pipeline that turns a written spec into verified, mergeable code | Agent orchestration, multi-model routing, quality gates, CI |
+| 2 | math-tiles | Math Tiles | public | Physical math tiles read by a webcam — live at an AI-driven school | Computer vision, real-time, PWA, edtech |
+| 3 | chatbridge | ChatBridge | public | A K-12 AI tutor that runs sandboxed learning apps inside chat, safely | AI safety, prompt-injection defense, moderation, tRPC |
+| 4 | sentinel-six | Sentinel Six | team | Real-time pose tracking that coaches stance against training doctrine | Pose estimation, rule engines, MediaPipe, product lead |
+| 5 | acme-invoice-agent | Acme Invoice Agent | public | Four LangGraph agents take an invoice from intake to payment with an audit trail | LangGraph, multi-agent, human-in-the-loop |
+| 6 | autonomous-ad-engine | Autonomous Ad Engine | public | Generates ads, grades them on 5 dimensions, and fixes its own failures | Evals, LLM-as-judge, self-healing loops, cost tracking |
+| 7 | legacylens | LegacyLens | private | Ask questions of COBOL, Fortran, and C codebases and get cited answers | RAG, code parsing, embeddings, FastAPI |
+| 8 | servicecore | ServiceCore | private | Field ops platform: GPS-verified time, job costing, payroll, QuickBooks export | Full-stack, geofencing, business logic |
+
+Sentinel Six team credit: Gauntlet AI capstone (G4-Prime-Capstone). Sam = product lead, research lead, wrote code, tuned the biometric/mechanical tracking. Confirm wording with the team before launch.
+
+## Status at launch (v1)
+Set `status` from what actually works on launch day: `live` only if the demo link opens on a phone; `video` if there's a recorded demo; `coming-soon` otherwise. Never ship a dead link.
+
+## Assets per project (`public/projects/<id>/`)
+| File | Spec |
+|---|---|
+| `poster.webp` | 1600×1000, < 200 KB — used on ring panel + OG image |
+| `shot-1..5.webp` | 1600px wide, < 250 KB each, real UI from a real run |
+| demo video | 60–90s, 1080p, hosted on YouTube (unlisted) or Vercel Blob; link in `links.video` |
+
+## Video script (60–90s, same shape for every project)
+1. 0–10s: the problem in one sentence, on screen
+2. 10–60s: the product doing the thing, real data, no dead air
+3. 60–80s: one "under the hood" shot (architecture, evals, tests passing)
+4. Last 5s: title + "samorth portfolio" card
+
+## Adding a project
+Run `/add-project <id>` in Claude Code, or: add assets → add entry to projects.ts → `pnpm test` (schema check) → update the guide evals if it changes skill answers.

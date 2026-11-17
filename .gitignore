@@ -1,0 +1,32 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next / build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# env — never commit
+.env
+.env.*
+!.env.example
+
+# test
+coverage/
+playwright-report/
+test-results/
+
+# vercel
+.vercel
+
+# claude / editor (personal)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# os
+.DS_Store
+*.log
