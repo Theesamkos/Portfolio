@@ -75,6 +75,34 @@ body {
   font-family: var(--font-sans);
 }
 
+/*
+ * HUD corner brackets (docs/DESIGN.md): 2px marks on the top-left and bottom-right
+ * corners of a panel. The element needs `position: relative`.
+ */
+@utility hud-brackets {
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 0 solid var(--accent);
+    pointer-events: none;
+  }
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-top-width: 2px;
+    border-left-width: 2px;
+  }
+  &::after {
+    right: -1px;
+    bottom: -1px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+  }
+}
+
 /* One visible focus style everywhere; keyboard users must always see where they are. */
 :focus-visible {
   outline: 2px solid var(--accent);
