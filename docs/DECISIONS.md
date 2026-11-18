@@ -2,6 +2,11 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-18 · The LCP element is hero text; posters get no loading priority
+- **Context:** the first card's poster sits inside the phone viewport and is larger than any text, so it became the LCP element (2.7s on simulated slow 4G against a 2.5s budget), whether loaded eagerly or lazily.
+- **Decision:** placeholder posters are drawn as inline SVG by `components/hud/Poster.tsx` (no request, not an LCP candidate). Real posters will be lazy `next/image` with no `preload`. An e2e test asserts the LCP element is hero text.
+- **Consequence:** LCP equals first paint (0.8s mobile locally). When real posters land the test may fail on phones; fix the layout then (the ring will sit above the list), not by prioritizing a poster.
+
 ## 2026-11-18 · Zustand store is a client-only module singleton
 - **Context:** the ring, HUD, list view and AI guide must share `activeProjectId`, `filters` and `viewMode`. A store created at module level is shared across requests if server code touches it.
 - **Decision:** Zustand 5 (`store/ui.ts`), one module-level store, imported only from client components. Server Components read `content/projects.ts` directly. Default `viewMode` is `list` until the ring ships.

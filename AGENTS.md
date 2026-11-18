@@ -47,7 +47,7 @@ lib/env.schema.ts          # pure Zod env parser; next.config.ts runs it so a ba
 lib/env.ts                 # `server-only` + parsed env — the only way app code reads env vars
 lib/security-headers.ts    # response headers + CSP (enforced subset, full policy report-only)
 lib/guide/                 # model.ts, system-prompt.ts, tools.ts, evals.ts
-components/hud/            # 2D overlay: panels, readouts, chat, list view (Hero, ProjectList, ProjectCard, StatusChip)
+components/hud/            # 2D overlay: panels, readouts, chat, list view (Hero, ProjectList, ProjectCard, Poster, StatusChip)
 components/scene/          # R3F: Renderer, Ring, ProjectPanel, CameraRig, Effects
 store/ui.ts                # Zustand: activeProjectId, filters, viewMode
 e2e/                       # Playwright smoke tests
@@ -55,6 +55,7 @@ e2e/                       # Playwright smoke tests
 ```
 As of Phase 2 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions`, `lib/guide/` and `components/scene/` — those arrive in later phases.
 
+**LCP is hero text.** Posters never get `preload`/eager loading; placeholders are inline SVG and real posters are lazy images. `e2e/home.spec.ts` fails if the LCP element is an image or outside the hero.
 **Project ids:** use the `ProjectId` type (derived from `content/projects.ts`), never a bare `string`.
 **Store:** `store/ui.ts` is a module singleton — import it only from client components. Server Components read `content/projects.ts` directly.
 
