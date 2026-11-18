@@ -4,6 +4,17 @@
 pre-commit:
   # Sequential on purpose: format and lint both rewrite staged files.
   jobs:
+    # First, and never skipped: the repo is public, so a secret must not leave this machine.
+    # A missing gitleaks fails the commit instead of silently passing.
+    - name: secrets
+      run: |
+        if ! command -v gitleaks >/dev/null 2>&1; then
+          echo "gitleaks is not installed, so this commit cannot be scanned for secrets."
+          echo "Install it with: brew install gitleaks"
+          exit 1
+        fi
+        gitleaks git --pre-commit --staged --redact --no-banner
+
     - name: format
       glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts,json,css,yml,yaml}"
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
