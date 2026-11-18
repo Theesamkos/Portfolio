@@ -1,21 +1,12 @@
-import Image from "next/image";
 import type { Project } from "@/lib/schema";
+import { Poster } from "./Poster";
 import { StatusChip, VisibilityChip } from "./StatusChip";
 
 const linkLabels = { demo: "Live demo", video: "Video", repo: "Code" } as const;
 const linkOrder = ["demo", "video", "repo"] as const;
 
 /** One project in the list view. A Server Component: plain HTML, no client JS. */
-export function ProjectCard({
-  project,
-  total,
-  eager = false,
-}: {
-  project: Project;
-  total: number;
-  /** Load the poster immediately — for cards visible on first paint. */
-  eager?: boolean;
-}) {
+export function ProjectCard({ project, total }: { project: Project; total: number }) {
   const headingId = `${project.id}-title`;
   const links = linkOrder.flatMap((kind) => {
     const href = project.links[kind];
@@ -29,16 +20,7 @@ export function ProjectCard({
       aria-labelledby={headingId}
       className="hud-brackets border-line bg-panel relative flex h-full scroll-mt-6 flex-col border"
     >
-      {/* Decorative placeholder until real screenshots land in Phase 7. */}
-      <Image
-        src={project.assets.poster}
-        alt=""
-        width={1600}
-        height={1000}
-        loading={eager ? "eager" : "lazy"}
-        sizes="(min-width: 768px) 50vw, 100vw"
-        className="border-line aspect-[16/7] w-full border-b object-cover"
-      />
+      <Poster project={project} total={total} />
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         {/* Never wraps: a wrap here before the mono font loads would shift the card. */}
