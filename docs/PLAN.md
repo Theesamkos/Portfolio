@@ -5,7 +5,7 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Phase 0 — Repo hygiene · Sam
 - [x] Vercel project connected to `Portfolio`
 - [x] Branch protection on `main` (PR required, status checks, no force push)
-- [ ] Dependabot alerts + security updates on
+- [x] Dependabot alerts + security updates on
 - [x] Remote URL uses `Theesamkos/Portfolio`
 
 ## Phase 1 — Foundation: scaffold, tooling, CI, security baseline
@@ -17,7 +17,8 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] Security headers + report-only CSP
 - [x] CI: typecheck, lint, test, build, e2e, gitleaks, audit — job `ci`
 - [x] Dependabot config
-- [ ] CI green; securityheaders.com A or better on preview — CI is green and the preview deploys; the scan is still open (see Handoff)
+- [x] CI green; Vercel preview loads
+- [ ] securityheaders.com A or better — scan the production URL after merge, tick on `main` (see Handoff)
 
 ## Phase 2 — Content model + list view
 **Lesson:** progressive enhancement — the list view is the real site.
@@ -67,12 +68,9 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-18 — Phase 1 built; two checks left before it is accepted.** PR #1 (`phase/1-foundation`), CI green, `ci` is a required check on `main`, Vercel preview deployment is READY.
-- **Sam — preview:** previews sit behind Vercel login, so nothing outside your account can load them. Open the preview while logged in and confirm the page shows.
-- **Sam — securityheaders.com (A or better):** the scanner can't get past the login either. Scan the production URL after merge, or turn off Vercel Authentication for previews (Project Settings → Deployment Protection) and scan the preview.
-- **Sam — gitleaks:** the pre-commit secret scan is written in `lefthook.yml` but not committed, because every commit now fails until gitleaks is installed: `brew install gitleaks`. Then commit `lefthook.yml` as `chore: add gitleaks secret scan to pre-commit`.
-- **Not verified:** Dependabot alerts + security updates (Phase 0) — check under repo Settings → Advanced Security.
-- When the first two are done, tick the last Phase 1 box.
+**2026-11-18 — Phase 1 built; one check left, done after merge.** PR #1 (`phase/1-foundation`), CI green, `ci` is a required check on `main`. Sam confirmed the Vercel preview loads and that Dependabot alerts, security updates and malware alerts are on.
+- **Sam — securityheaders.com (A or better):** previews sit behind Vercel login, so the scanner can't reach them. Scan the production URL after merge, then tick the last Phase 1 box on `main`.
+- **Local setup:** the pre-commit hook now runs a gitleaks secret scan and fails if gitleaks is missing — `brew install gitleaks` on any new machine.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
