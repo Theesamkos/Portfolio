@@ -7,6 +7,9 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Matches minimumReleaseAge in pnpm-workspace.yaml, so update PRs can install.
+    cooldown:
+      default-days: 3
     commit-message:
       prefix: chore
       include: scope
