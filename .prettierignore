@@ -7,6 +7,9 @@ test-results/
 next-env.d.ts
 pnpm-lock.yaml
 
+# Report the gitleaks action writes into the workspace in CI
+*.sarif
+
 # Hand-written docs and agent setup keep their own formatting
 *.md
 .claude/
