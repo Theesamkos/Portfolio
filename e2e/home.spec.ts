@@ -33,3 +33,87 @@ test("home page loads without console errors or CSP violations", async ({ page }
 
   expect(problems).toEqual([]);
 });
+
+test.describe("list view", () => {
+  test("renders all 8 project cards with a contact row", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("article")).toHaveCount(8);
+    const contact = page.getByRole("navigation", { name: "Contact" });
+    await expect(contact.getByRole("link")).toHaveCount(3);
+    await expect(page.getByRole("link", { name: /^Code/ })).toHaveCount(4);
+  });
+
+  test("keyboard: first Tab reaches the skip link, which is visible when focused", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.keyboard.press("Tab");
+
+    const skipLink = page.getByRole("link", { name: "Skip to projects" });
+    await expect(skipLink).toBeFocused();
+    await expect(skipLink).toBeInViewport();
+  });
+
+  test("every poster image loads", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    const posters = page.locator("article img");
+    await expect(posters).toHaveCount(8);
+    await expect
+      .poll(() =>
+        posters.evaluateAll((images) =>
+          images.every((image) => (image as HTMLImageElement).naturalWidth > 0),
+        ),
+      )
+      .toBe(true);
+  });
+});
+
+test.describe("list view at 375px", () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test("shows 8 cards with no horizontal scroll", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("article")).toHaveCount(8);
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+  });
+
+  test("keeps a 16px gutter around every card", async ({ page }) => {
+    await page.goto("/");
+
+    for (const card of await page.getByRole("article").all()) {
+      const box = await card.boundingBox();
+      expect(box?.x).toBeGreaterThanOrEqual(16);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375 - 16);
+    }
+  });
+});
+
+test.describe("list view with JavaScript disabled", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("shows the hero, contact links and all 8 projects", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { level: 1, name: "Samuel Orth" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /samorthtech@gmail\.com/ }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /linkedin/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /github\.com\/Theesamkos$/ })).toBeVisible();
+
+    const cards = page.getByRole("article");
+    await expect(cards).toHaveCount(8);
+    for (const card of await cards.all()) {
+      await expect(card.getByRole("heading", { level: 3 })).toBeVisible();
+      await expect(card.getByRole("listitem").first()).toBeVisible();
+      await expect(card.getByText("Coming soon")).toBeVisible();
+    }
+    await expect(page.getByRole("link", { name: /^Code/ })).toHaveCount(4);
+  });
+});
