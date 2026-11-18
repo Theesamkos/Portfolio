@@ -22,13 +22,14 @@ Read next, as needed: `docs/PRD.md` (what), `docs/ARCHITECTURE.md` (how), `docs/
 8. **Honesty.** Copy and the AI guide only state what's in `content/` and `docs/AI_GUIDE.md`. No invented metrics, degrees, or skills.
 
 ## Stack (verify current stable versions with `npm view <pkg> version` before installing — never trust versions from memory)
-- Next.js (App Router, TypeScript strict, Turbopack), pnpm
-- Tailwind CSS (2D HUD layer)
+- Next.js 16 (App Router, TypeScript strict, Turbopack, Cache Components on), pnpm 10 (pinned in `packageManager`), Node 22 (`.nvmrc`)
+- TypeScript **6.0.x** — not 7 yet: typescript-eslint doesn't support it (see docs/DECISIONS.md)
+- Tailwind CSS 4 (2D HUD layer), loaded through the `@tailwindcss/turbopack` loader in `next.config.ts` — there is no PostCSS config
 - React Three Fiber + @react-three/drei + @react-three/postprocessing — **WebGL renderer** (R3F WebGPU is alpha as of Nov 2026; keep renderer isolated in `components/scene/Renderer.tsx` for a later swap)
 - Zustand (shared UI state), Zod (all schemas)
 - Vercel AI SDK (guide), Anthropic by default; provider chosen in one file (`lib/guide/model.ts`)
 - Upstash Redis + @upstash/ratelimit, Resend (access-request email)
-- Vitest (unit), Playwright (e2e smoke), ESLint, Prettier
+- Vitest (unit, `*.test.ts(x)` next to the code), Playwright (e2e smoke in `e2e/`, runs against the production build), ESLint 10 flat config, Prettier, lefthook pre-commit
 
 ## Architecture (short — full version in docs/ARCHITECTURE.md)
 ```
@@ -39,23 +40,35 @@ app/
   actions/request-access.ts# server action → Resend email
 content/projects.ts        # single source of truth, Zod-validated
 lib/schema.ts              # Project schema
+lib/env.schema.ts          # pure Zod env parser; next.config.ts runs it so a bad env fails the build
+lib/env.ts                 # `server-only` + parsed env — the only way app code reads env vars
+lib/security-headers.ts    # response headers + CSP (enforced subset, full policy report-only)
 lib/guide/                 # model.ts, system-prompt.ts, tools.ts, evals.ts
 components/hud/            # 2D overlay: panels, readouts, chat, list view
 components/scene/          # R3F: Renderer, Ring, ProjectPanel, CameraRig, Effects
 store/ui.ts                # Zustand: activeProjectId, filters, viewMode
+e2e/                       # Playwright smoke tests
+.github/workflows/ci.yml   # job `ci`: secret scan, audit, typecheck, lint, format, test, build, e2e
 ```
+Paths above `lib/env*` and `lib/security-headers.ts` exist as of Phase 1; the rest arrive in later phases.
+
+**Env vars:** add each new variable to `.env.example` (name only) and to `serverEnvSchema` in `lib/env.schema.ts` as optional; add it to `requiredInProduction` in the phase that first uses it. Never read `process.env` directly in app code.
+
+**CSP:** when a feature needs a new source (fonts, analytics, the guide's streaming), add it to `reportOnlyCsp` in `lib/security-headers.ts` in the same commit. The e2e suite fails on console errors.
 **One store drives everything.** Ring, HUD panel, list view, and AI guide all read/write `activeProjectId` + `filters`. An AI tool call dispatches the same store action a click does.
 
 ## Commands
 ```
 pnpm dev          # local dev
 pnpm build        # production build (must pass before any PR)
-pnpm typecheck    # tsc --noEmit
-pnpm lint         # eslint
-pnpm test         # vitest
-pnpm e2e          # playwright smoke
-pnpm eval         # AI guide evals (run before deploying guide changes)
+pnpm typecheck    # next typegen && tsc --noEmit
+pnpm lint         # eslint .
+pnpm format       # prettier --write . (format:check in CI)
+pnpm test         # vitest run (test:watch for watch mode)
+pnpm e2e          # playwright smoke; builds first locally (first time: pnpm exec playwright install chromium)
+pnpm eval         # AI guide evals — placeholder until Phase 5
 ```
+`pnpm install` also installs the lefthook pre-commit hook (prettier + eslint on staged files, typecheck when TS changes).
 
 ## Conventions
 - TypeScript strict; no `any` without a comment explaining why.
