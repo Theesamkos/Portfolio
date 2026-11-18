@@ -3,8 +3,8 @@
 Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts and expected commits for each phase: the **Portfolio Runbook** (kept outside the repo). Tick boxes in the same commit that proves them.
 
 ## Phase 0 — Repo hygiene · Sam
-- [ ] Vercel project connected to `Portfolio`
-- [ ] Branch protection on `main` (PR required, status checks, no force push)
+- [x] Vercel project connected to `Portfolio`
+- [x] Branch protection on `main` (PR required, status checks, no force push)
 - [ ] Dependabot alerts + security updates on
 - [x] Remote URL uses `Theesamkos/Portfolio`
 
@@ -17,7 +17,7 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] Security headers + report-only CSP
 - [x] CI: typecheck, lint, test, build, e2e, gitleaks, audit — job `ci`
 - [x] Dependabot config
-- [ ] CI green; securityheaders.com A or better on preview — CI is green on PR #1; the preview does not deploy yet (see Handoff)
+- [ ] CI green; securityheaders.com A or better on preview — CI is green and the preview deploys; the scan is still open (see Handoff)
 
 ## Phase 2 — Content model + list view
 **Lesson:** progressive enhancement — the list view is the real site.
@@ -67,11 +67,12 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-18 — Phase 1 built, not yet accepted.** PR #1 (`phase/1-foundation`), CI green.
-- **Blocker:** the Vercel preview fails after a successful build with `No Output Directory named "public"`. The Vercel project's Framework Preset is not Next.js (it was created before the app existed). Fix: set the preset to Next.js in Project Settings, or add `vercel.json` with `"framework": "nextjs"`.
-- **Then (Sam):** confirm the preview loads; scan it on securityheaders.com (A or better); add the `ci` status check to the `protect-main` ruleset.
-- **Open from the security review:** no local secret scan before push (repo is public); `.gitignore` misses `.envrc` and `*.env`; `.claude/settings.json` allows `git commit --no-verify`.
-- **Not done:** `serverEnvSchema` has no real variables yet — the names in `.env.example` still need adding (as optional) to `lib/env.schema.ts`.
+**2026-11-18 — Phase 1 built; two checks left before it is accepted.** PR #1 (`phase/1-foundation`), CI green, `ci` is a required check on `main`, Vercel preview deployment is READY.
+- **Sam — preview:** previews sit behind Vercel login, so nothing outside your account can load them. Open the preview while logged in and confirm the page shows.
+- **Sam — securityheaders.com (A or better):** the scanner can't get past the login either. Scan the production URL after merge, or turn off Vercel Authentication for previews (Project Settings → Deployment Protection) and scan the preview.
+- **Sam — gitleaks:** the pre-commit secret scan is written in `lefthook.yml` but not committed, because every commit now fails until gitleaks is installed: `brew install gitleaks`. Then commit `lefthook.yml` as `chore: add gitleaks secret scan to pre-commit`.
+- **Not verified:** Dependabot alerts + security updates (Phase 0) — check under repo Settings → Advanced Security.
+- When the first two are done, tick the last Phase 1 box.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
