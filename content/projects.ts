@@ -75,7 +75,7 @@ const seed = [
     bullets: [
       "Tracks body pose in real time with MediaPipe",
       "A rule engine checks each stance against training doctrine and coaches corrections",
-      "Gauntlet AI team capstone: Sam led product and research, wrote code and tuned the tracking",
+      "Sam wrote code and tuned the biometric and mechanical tracking",
     ],
     skills: ["Pose estimation", "Rule engines", "MediaPipe", "Product lead"],
     tags: ["computer-vision", "training"],
