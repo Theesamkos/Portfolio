@@ -22,11 +22,11 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 
 ## Phase 2 — Content model + list view
 **Lesson:** progressive enhancement — the list view is the real site.
-- [ ] Schema + ProjectId enum + 8 seeded projects; validation tests
-- [ ] Design tokens + fonts
-- [ ] UI store + tests
-- [ ] SSR list view (works with JS off), mobile e2e
-- [ ] Lighthouse mobile ≥ 90; real phone check
+- [x] Schema + ProjectId enum + 8 seeded projects; validation tests
+- [x] Design tokens + fonts
+- [x] UI store + tests
+- [x] SSR list view (works with JS off), mobile e2e
+- [ ] Lighthouse mobile ≥ 90; real phone check — local run scores 96; preview run and phone check are Sam's (see Handoff)
 
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
@@ -68,9 +68,16 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-18 — Phase 1 built; one check left, done after merge.** PR #1 (`phase/1-foundation`), CI green, `ci` is a required check on `main`. Sam confirmed the Vercel preview loads and that Dependabot alerts, security updates and malware alerts are on.
-- **Sam — securityheaders.com (A or better):** previews sit behind Vercel login, so the scanner can't reach them. Scan the production URL after merge, then tick the last Phase 1 box on `main`.
-- **Local setup:** the pre-commit hook now runs a gitleaks secret scan and fails if gitleaks is missing — `brew install gitleaks` on any new machine.
+**2026-11-18 — Phase 2 built on `phase/2-content-list`; two manual checks left.** Phase 1 merged (PR #1).
+- **Sam — Lighthouse on the preview (mobile ≥ 90):** local run against the production build scores 96 / 100 / 100 / 100 (performance / a11y / best practices / SEO). Run it on the Vercel preview URL, then tick the last Phase 2 box.
+- **Sam — real phone check:** open the preview on a phone: all 8 cards, no sideways scroll, contact links and the 4 "Code" links open.
+- **Sam — securityheaders.com (A or better):** still open from Phase 1. Scan the production URL, then tick the last Phase 1 box.
+- **Draft copy:** every `bullets`, `tags` and `stack` value in `content/projects.ts` is a draft with no metrics; Phase 7 replaces them from each repo. Sentinel Six team wording still needs the team's OK.
+- **Placeholders:** posters are generated SVGs (`public/projects/<id>/poster.svg`), not the `poster.webp` in docs/CONTENT.md. All 8 projects are `coming-soon`; the 4 public repos link to GitHub.
+- **Known gap:** Lighthouse's simulated slow-4G LCP is 2.7s locally (budget is 2.5s). The LCP element is the first placeholder poster; re-measure on the preview and again when real posters land.
+- **ui-auditor:** no critical or high findings; one medium (mobile layout shift, now 0) and five low, all fixed in `fix(list): address ui audit findings`.
+- **Phase 3 risk:** the page already ships about 141 KB gzipped of framework JS against the 150 KB "JS before 3D" budget (ui-auditor's measurement). The store, toggle and lazy loader must fit in about 9 KB, or the budget needs a logged decision.
+- **Local setup:** the pre-commit hook runs a gitleaks secret scan and fails if gitleaks is missing — `brew install gitleaks` on any new machine.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version

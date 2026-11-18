@@ -35,6 +35,10 @@ Project {
 
 Sentinel Six team credit: Gauntlet AI capstone (G4-Prime-Capstone). Sam = product lead, research lead, wrote code, tuned the biometric/mechanical tracking. Confirm wording with the team before launch.
 
+**Draft copy (Phase 2):** `bullets`, `tags` and `stack` in `content/projects.ts` were drafted from this table and state no metrics. Phase 7 rewrites them from each repo. `stack` lists only technologies named above, so some are empty.
+
+**Schema rules beyond the field types:** `live` needs `links.demo`, `video` needs `links.video`, `team` needs `team`, and `links.repo` is allowed only when `visibility` is `public`.
+
 ## Status at launch (v1)
 Set `status` from what actually works on launch day: `live` only if the demo link opens on a phone; `video` if there's a recorded demo; `coming-soon` otherwise. Never ship a dead link.
 
