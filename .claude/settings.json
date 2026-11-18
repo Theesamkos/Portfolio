@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Read(./.env.example)",
       "Bash(pnpm install)",
-      "Bash(pnpm add:*)",
       "Bash(pnpm dev)",
       "Bash(pnpm build)",
       "Bash(pnpm typecheck)",
@@ -20,14 +20,21 @@
       "Bash(git commit:*)"
     ],
     "ask": [
+      "Bash(pnpm add:*)",
       "Bash(git push:*)",
       "Bash(vercel:*)",
       "Bash(rm:*)"
     ],
     "deny": [
       "Read(./.env)",
-      "Read(./.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
       "Read(**/.env.local)",
+      "Bash(git commit --no-verify:*)",
+      "Bash(git commit *--no-verify*)",
+      "Bash(git commit -n:*)",
+      "Bash(git push --no-verify:*)",
+      "Bash(git push *--no-verify*)",
       "Bash(git push --force:*)",
       "Bash(rm -rf:*)"
     ]
