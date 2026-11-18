@@ -1,17 +1,94 @@
 @import "tailwindcss";
 
-/* Design tokens — see docs/DESIGN.md. The rest of the palette lands in Phase 2. */
+/*
+ * Design tokens — the single place colors, type and motion are defined.
+ * Source: docs/DESIGN.md. Components use the Tailwind classes generated from the
+ * @theme blocks below (text-ink, bg-panel, border-line, font-display, text-xl, ...),
+ * never raw hex values.
+ */
 :root {
+  /* Color */
   --bg: #05080f;
+  --bg-glow: #0b1a2e;
+  --panel: rgba(12, 22, 38, 0.72);
+  --line: rgba(110, 200, 255, 0.22);
+  --accent: #3fd0ff;
+  --accent-2: #7cf5d4;
+  --warn: #ffcc66;
   --ink: #e8f1fb;
+  --ink-dim: #8aa0b8;
+
+  /* Motion */
+  --motion-ring: 600ms;
+  --motion-camera: 800ms;
+  --motion-panel: 250ms;
+  --motion-scan: 400ms;
+
+  color-scheme: dark;
 }
 
+/* `inline` makes utilities reference the variables above, so one edit there restyles everything. */
 @theme inline {
   --color-bg: var(--bg);
+  --color-bg-glow: var(--bg-glow);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-warn: var(--warn);
   --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+
+  /* The --font-* variables on the right are set by next/font in app/fonts.ts. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@theme {
+  /* Type scale: 12 / 14 / 16 / 20 / 28 / 44 / 64. Replaces Tailwind's default sizes. */
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 1.25;
+  --text-2xl: 2.75rem;
+  --text-2xl--line-height: 1.1;
+  --text-3xl: 4rem;
+  --text-3xl--line-height: 1.05;
+
+  /* Data readouts: mono, uppercase, tracked out. */
+  --tracking-readout: 0.08em;
+
+  --transition-duration-panel: var(--motion-panel);
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* One visible focus style everywhere; keyboard users must always see where they are. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
