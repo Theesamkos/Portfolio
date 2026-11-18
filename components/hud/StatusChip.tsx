@@ -15,7 +15,7 @@ const visibilityLabels: Record<ProjectVisibility, string | null> = {
 };
 
 const chip =
-  "inline-flex items-center border px-2 py-0.5 font-mono text-xs tracking-readout uppercase";
+  "inline-flex shrink-0 items-center border px-2 py-0.5 font-mono text-xs tracking-readout whitespace-nowrap uppercase";
 
 export function StatusChip({ status }: { status: ProjectStatus }) {
   const { label, className } = statusChips[status];

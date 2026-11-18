@@ -21,12 +21,17 @@ export const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
 });
 
-/** Data readouts and chips. Small text only, so it is not preloaded. */
+/**
+ * Data readouts and chips. The default fallback is a stretched Arial, which is wider
+ * than the real font and made chip rows wrap, then jump back when the font arrived.
+ * A real monospace fallback keeps the widths close, so the swap moves nothing.
+ */
 export const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-jetbrains-mono",
-  preload: false,
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SF Mono", "Menlo", "Consolas", "monospace"],
 });
 
 export const fontVariables = [inter.variable, spaceGrotesk.variable, jetBrainsMono.variable].join(

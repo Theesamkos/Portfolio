@@ -77,7 +77,9 @@ body {
 
 /*
  * HUD corner brackets (docs/DESIGN.md): 2px marks on the top-left and bottom-right
- * corners of a panel. The element needs `position: relative`.
+ * corners of a panel, in --line. They switch to the accent only when the panel is
+ * active: hovered, holding keyboard focus, or marked `data-active` (the ring, Phase 3).
+ * The element needs `position: relative`.
  */
 @utility hud-brackets {
   &::before,
@@ -86,8 +88,17 @@ body {
     position: absolute;
     width: 14px;
     height: 14px;
-    border: 0 solid var(--accent);
+    border: 0 solid var(--line);
     pointer-events: none;
+    transition: border-color var(--motion-panel) ease-out;
+  }
+  &:hover::before,
+  &:hover::after,
+  &:focus-within::before,
+  &:focus-within::after,
+  &[data-active]::before,
+  &[data-active]::after {
+    border-color: var(--accent);
   }
   &::before {
     top: -1px;
@@ -107,7 +118,6 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
-  border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
