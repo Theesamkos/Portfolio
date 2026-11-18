@@ -2,6 +2,16 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-18 · Zustand store is a client-only module singleton
+- **Context:** the ring, HUD, list view and AI guide must share `activeProjectId`, `filters` and `viewMode`. A store created at module level is shared across requests if server code touches it.
+- **Decision:** Zustand 5 (`store/ui.ts`), one module-level store, imported only from client components. Server Components read `content/projects.ts` directly. Default `viewMode` is `list` until the ring ships.
+- **Consequence:** no provider, and code outside React (guide tool calls) can dispatch with `useUiStore.getState()`. If state ever has to be rendered on the server per request, move to a per-request store in a context provider.
+
+## 2026-11-18 · Project ids are a type derived from the content
+- **Context:** the store, the routes and the guide's tools all take a project id; a free `string` lets typos through.
+- **Decision:** `content/projects.ts` declares the seed `as const satisfies ProjectInput[]`; `ProjectId` and `projectIdSchema` are derived from it. `lib/schema.ts` holds the schema (strict objects, readonly arrays) plus cross-field rules: `live` needs a demo link, `video` needs a video link, `team` needs a credit, and only `public` projects may carry a repo link.
+- **Consequence:** adding a project is one edit; an unknown id fails typecheck, and content that would ship a dead or private link fails `pnpm test` and the build.
+
 ## 2026-11-18 · New package versions wait 3 days before install
 - **Context:** compromised npm releases are usually caught and unpublished within a day or two; installing on release day is the exposure window.
 - **Decision:** `minimumReleaseAge: 4320` (minutes) in `pnpm-workspace.yaml`, with a matching 3-day `cooldown` in Dependabot. pnpm fails resolution rather than falling back when no version is old enough.
