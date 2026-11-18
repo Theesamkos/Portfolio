@@ -15,6 +15,7 @@ test("home page is served with security headers", async ({ request }) => {
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
   expect(headers["permissions-policy"]).toContain("camera=()");
   expect(headers["x-frame-options"]).toBe("DENY");
+  expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
   expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
   expect(headers["content-security-policy-report-only"]).toContain("default-src 'self'");
   expect(headers["x-powered-by"]).toBeUndefined();

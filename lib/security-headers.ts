@@ -50,6 +50,8 @@ export function securityHeaders({ isDev }: { isDev: boolean }): Header[] {
     { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
     // Legacy twin of frame-ancestors for older browsers and scanners.
     { key: "X-Frame-Options", value: "DENY" },
+    // Isolate the page from windows it opens or is opened by on other origins.
+    { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
     { key: "Content-Security-Policy", value: serialize(enforcedCsp) },
     { key: "Content-Security-Policy-Report-Only", value: serialize(reportOnlyCsp(isDev)) },
   ];
