@@ -11,7 +11,7 @@ Sam is an AI engineer leveling up to current best practices. He wants to be taug
 - **One phase at a time.** Work only on the current phase in `docs/PLAN.md`. Ideas outside it go in the "Later" list at the bottom of PLAN.md, not into code.
 - **Prove it.** Report "done" only with evidence: command output, test results, or a browser check. If something couldn't be verified, say so.
 - **Verify versions.** Check current stable versions and current docs before installing or using a library API. Don't write code from memory against fast-moving APIs (AI SDK, R3F, Next.js).
-- **Keep docs live.** Tick acceptance boxes in `docs/PLAN.md`, log decisions in `docs/DECISIONS.md`, and update `AGENTS.md` when architecture changes — in the same commit.
+- **Keep docs live.** Tick acceptance boxes in `docs/PLAN.md`, log decisions in `docs/DECISIONS.md`, and update `AGENTS.md` when architecture changes — in the same PR as the change, but in their own `docs(...)` commit, never bundled into a `feat`/`fix` commit.
 - **Never read or print `.env*` files** (except `.env.example`). Ask Sam to set env vars himself.
 
 ## Useful commands in this repo
