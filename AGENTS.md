@@ -38,19 +38,25 @@ app/
   projects/[id]/page.tsx   # case study pages
   api/guide/route.ts       # AI guide: streamText + tools, rate-limited, token-capped
   actions/request-access.ts# server action → Resend email
-content/projects.ts        # single source of truth, Zod-validated
-lib/schema.ts              # Project schema
+  fonts.ts                 # next/font (Inter, Space Grotesk, JetBrains Mono) → CSS variables
+  globals.css              # design tokens + Tailwind 4 @theme — the only place colors/type are defined
+content/projects.ts        # single source of truth, Zod-validated; exports ProjectId + projectIdSchema
+lib/schema.ts              # Project schema + cross-field rules (no dead or private links)
+lib/site.ts                # name, identity line, contact links (facts from docs/AI_GUIDE.md)
 lib/env.schema.ts          # pure Zod env parser; next.config.ts runs it so a bad env fails the build
 lib/env.ts                 # `server-only` + parsed env — the only way app code reads env vars
 lib/security-headers.ts    # response headers + CSP (enforced subset, full policy report-only)
 lib/guide/                 # model.ts, system-prompt.ts, tools.ts, evals.ts
-components/hud/            # 2D overlay: panels, readouts, chat, list view
+components/hud/            # 2D overlay: panels, readouts, chat, list view (Hero, ProjectList, ProjectCard, StatusChip)
 components/scene/          # R3F: Renderer, Ring, ProjectPanel, CameraRig, Effects
 store/ui.ts                # Zustand: activeProjectId, filters, viewMode
 e2e/                       # Playwright smoke tests
 .github/workflows/ci.yml   # job `ci`: secret scan, audit, typecheck, lint, format, test, build, e2e
 ```
-Paths above `lib/env*` and `lib/security-headers.ts` exist as of Phase 1; the rest arrive in later phases.
+As of Phase 2 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions`, `lib/guide/` and `components/scene/` — those arrive in later phases.
+
+**Project ids:** use the `ProjectId` type (derived from `content/projects.ts`), never a bare `string`.
+**Store:** `store/ui.ts` is a module singleton — import it only from client components. Server Components read `content/projects.ts` directly.
 
 **Env vars:** add each new variable to `.env.example` (name only) and to `serverEnvSchema` in `lib/env.schema.ts` as optional; add it to `requiredInProduction` in the phase that first uses it. Never read `process.env` directly in app code.
 
