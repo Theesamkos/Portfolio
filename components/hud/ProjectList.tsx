@@ -14,7 +14,8 @@ export function ProjectList({ projects }: { projects: readonly Project[] }) {
         </p>
       </div>
 
-      <ol className="grid gap-6 md:grid-cols-2">
+      {/* role="list": Safari drops list semantics when list-style is none (Tailwind's reset). */}
+      <ol role="list" className="grid gap-6 md:grid-cols-2">
         {projects.map((project, index) => (
           <li key={project.id}>
             {/* The first row is on screen at load; the rest load as they scroll in. */}

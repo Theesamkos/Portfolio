@@ -36,12 +36,14 @@ export function ProjectCard({
         width={1600}
         height={1000}
         loading={eager ? "eager" : "lazy"}
+        sizes="(min-width: 768px) 50vw, 100vw"
         className="border-line aspect-[16/7] w-full border-b object-cover"
       />
 
       <div className="flex flex-1 flex-col gap-4 p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-ink-dim tracking-readout mr-auto font-mono text-xs uppercase">
+        {/* Never wraps: a wrap here before the mono font loads would shift the card. */}
+        <div className="flex items-center gap-2">
+          <span className="text-ink-dim tracking-readout mr-auto min-w-0 truncate font-mono text-xs uppercase">
             <span className="sr-only">Project </span>
             {position}
           </span>
@@ -68,7 +70,7 @@ export function ProjectCard({
           </p>
         ) : null}
 
-        <ul aria-label={`${project.title} skills`} className="flex flex-wrap gap-2">
+        <ul role="list" aria-label={`${project.title} skills`} className="flex flex-wrap gap-2">
           {project.skills.map((skill) => (
             <li
               key={skill}
@@ -80,7 +82,11 @@ export function ProjectCard({
         </ul>
 
         {links.length > 0 ? (
-          <ul aria-label={`${project.title} links`} className="mt-auto flex flex-wrap gap-3 pt-1">
+          <ul
+            role="list"
+            aria-label={`${project.title} links`}
+            className="mt-auto flex flex-wrap gap-3 pt-1"
+          >
             {links.map(({ kind, href }) => (
               <li key={kind}>
                 <a
