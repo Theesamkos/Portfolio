@@ -43,4 +43,33 @@ describe("parseServerEnv", () => {
     expect(() => parseServerEnv({ VERCEL_ENV: "production" })).not.toThrow();
     expect(() => parseServerEnv({ VERCEL_ENV: "nonsense" })).toThrow(/VERCEL_ENV/);
   });
+
+  test("requires nothing yet, even in production", () => {
+    expect(parseServerEnv({ VERCEL_ENV: "production" })).toEqual({ VERCEL_ENV: "production" });
+  });
+
+  test("accepts every documented variable and drops unknown ones", () => {
+    const full = {
+      ANTHROPIC_API_KEY: "test-anthropic",
+      OPENAI_API_KEY: "test-openai",
+      UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "test-token",
+      RESEND_API_KEY: "test-resend",
+      ACCESS_REQUEST_TO_EMAIL: "owner@example.com",
+    };
+
+    expect(parseServerEnv({ ...full, PATH: "/usr/bin" })).toEqual(full);
+  });
+
+  test("validates ACCESS_REQUEST_TO_EMAIL as an email", () => {
+    expect(() => parseServerEnv({ ACCESS_REQUEST_TO_EMAIL: "not-an-email" })).toThrow(
+      /ACCESS_REQUEST_TO_EMAIL/,
+    );
+  });
+
+  test("validates UPSTASH_REDIS_REST_URL as a URL", () => {
+    expect(() => parseServerEnv({ UPSTASH_REDIS_REST_URL: "not a url" })).toThrow(
+      /UPSTASH_REDIS_REST_URL/,
+    );
+  });
 });
