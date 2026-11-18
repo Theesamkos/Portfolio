@@ -27,6 +27,7 @@ test-results/
 CLAUDE.local.md
 .claude/settings.local.json
 
-# os
+# os / misc
 .DS_Store
 *.log
+*.pem
