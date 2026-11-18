@@ -6,18 +6,18 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [ ] Vercel project connected to `Portfolio`
 - [ ] Branch protection on `main` (PR required, status checks, no force push)
 - [ ] Dependabot alerts + security updates on
-- [ ] Remote URL uses `Theesamkos/Portfolio`
+- [x] Remote URL uses `Theesamkos/Portfolio`
 
 ## Phase 1 — Foundation: scaffold, tooling, CI, security baseline
 **Lesson:** quality and security gates are scaffolding, not features.
-- [ ] Next.js + TS strict + Turbopack + pnpm, versions verified; existing docs preserved
-- [ ] ESLint, Prettier, lefthook pre-commit
-- [ ] Vitest + Playwright smoke test
-- [ ] `lib/env.ts` Zod env validation with `server-only`
-- [ ] Security headers + report-only CSP
-- [ ] CI: typecheck, lint, test, build, e2e, gitleaks, audit — job `ci`
-- [ ] Dependabot config
-- [ ] CI green; securityheaders.com A or better on preview
+- [x] Next.js + TS strict + Turbopack + pnpm, versions verified; existing docs preserved
+- [x] ESLint, Prettier, lefthook pre-commit
+- [x] Vitest + Playwright smoke test
+- [x] `lib/env.ts` Zod env validation with `server-only`
+- [x] Security headers + report-only CSP
+- [x] CI: typecheck, lint, test, build, e2e, gitleaks, audit — job `ci`
+- [x] Dependabot config
+- [ ] CI green; securityheaders.com A or better on preview — CI is green on PR #1; the preview does not deploy yet (see Handoff)
 
 ## Phase 2 — Content model + list view
 **Lesson:** progressive enhancement — the list view is the real site.
@@ -66,6 +66,12 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 
 ## Handoff
 _(updated at the end of each session)_
+
+**2026-11-18 — Phase 1 built, not yet accepted.** PR #1 (`phase/1-foundation`), CI green.
+- **Blocker:** the Vercel preview fails after a successful build with `No Output Directory named "public"`. The Vercel project's Framework Preset is not Next.js (it was created before the app existed). Fix: set the preset to Next.js in Project Settings, or add `vercel.json` with `"framework": "nextjs"`.
+- **Then (Sam):** confirm the preview loads; scan it on securityheaders.com (A or better); add the `ci` status check to the `protect-main` ruleset.
+- **Open from the security review:** no local secret scan before push (repo is public); `.gitignore` misses `.envrc` and `*.env`; `.claude/settings.json` allows `git commit --no-verify`.
+- **Not done:** `serverEnvSchema` has no real variables yet — the names in `.env.example` still need adding (as optional) to `lib/env.schema.ts`.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
