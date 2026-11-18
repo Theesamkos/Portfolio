@@ -16,7 +16,8 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // Smoke tests run against the production build, so headers and output match what ships.
   webServer: {
-    command: "pnpm build && pnpm start",
+    // CI builds in its own step first; locally the build happens here.
+    command: isCI ? "pnpm start" : "pnpm build && pnpm start",
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !isCI,
     timeout: 180_000,
