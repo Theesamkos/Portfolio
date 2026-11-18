@@ -1,3 +1,5 @@
 ignoredBuiltDependencies:
+  # lefthook's own postinstall is skipped; the "prepare" script installs the hooks instead.
+  - lefthook
   - sharp
   - unrs-resolver

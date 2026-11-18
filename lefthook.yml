@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://lefthook.dev/schema.json
+# Hooks are installed by the "prepare" script (`lefthook install`) on `pnpm install`.
+
+pre-commit:
+  # Sequential on purpose: format and lint both rewrite staged files.
+  jobs:
+    - name: format
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts,json,css,yml,yaml}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    - name: lint
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts}"
+      run: pnpm exec eslint --fix --max-warnings=0 {staged_files}
+      stage_fixed: true
+
+    - name: typecheck
+      glob: "*.{ts,tsx,mts}"
+      run: pnpm typecheck
