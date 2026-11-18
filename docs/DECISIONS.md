@@ -2,6 +2,11 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-18 · New package versions wait 3 days before install
+- **Context:** compromised npm releases are usually caught and unpublished within a day or two; installing on release day is the exposure window.
+- **Decision:** `minimumReleaseAge: 4320` (minutes) in `pnpm-workspace.yaml`, with a matching 3-day `cooldown` in Dependabot. pnpm fails resolution rather than falling back when no version is old enough.
+- **Consequence:** a brand-new version (including an urgent security patch) can't be installed for 3 days unless it is listed in `minimumReleaseAgeExclude` — do that deliberately, per package, and remove it afterwards.
+
 ## 2026-11-18 · CSP: small enforced policy now, full policy report-only until launch
 - **Context:** `frame-ancestors` is not honored in a report-only policy, and nonce-based CSP forces every page to render dynamically, which conflicts with the speed budget.
 - **Decision:** enforce only `frame-ancestors`, `base-uri`, `object-src`, `form-action` (they can't break rendering). Ship the full policy as `Content-Security-Policy-Report-Only`, without nonces (`script-src 'self' 'unsafe-inline'`). No report endpoint yet — violations show in the browser console and fail the e2e suite.
