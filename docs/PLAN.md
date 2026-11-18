@@ -26,7 +26,7 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] Design tokens + fonts
 - [x] UI store + tests
 - [x] SSR list view (works with JS off), mobile e2e
-- [ ] Lighthouse mobile ≥ 90; real phone check — local run scores 100; preview run and phone check are Sam's (see Handoff)
+- [x] Lighthouse mobile ≥ 90; real phone check — Lighthouse measured locally only (100 against the production build; not run on the preview); phone and Mac checks passed on the Vercel preview (Sam)
 
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
@@ -68,9 +68,9 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-18 — Phase 2 built on `phase/2-content-list`; two manual checks left.** Phase 1 merged (PR #1).
-- **Sam — Lighthouse on the preview (mobile ≥ 90):** local run against the production build scores 100 / 100 / 100 / 100 (performance / a11y / best practices / SEO). Run it on the Vercel preview URL, then tick the last Phase 2 box.
-- **Sam — real phone check:** open the preview on a phone: all 8 cards, no sideways scroll, contact links and the 4 "Code" links open.
+**2026-11-18 — Phase 2 complete on `phase/2-content-list` (PR #2).** Phase 1 merged (PR #1).
+- **Lighthouse:** local run against the production build scores 100 / 100 / 100 / 100 (performance / a11y / best practices / SEO). It was not run on the Vercel preview; Sam accepted the local result.
+- **Phone and Mac check:** passed on the Vercel preview (Sam).
 - **Sam — securityheaders.com (A or better):** still open from Phase 1. Scan the production URL, then tick the last Phase 1 box.
 - **Draft copy:** every `bullets`, `tags` and `stack` value in `content/projects.ts` is a draft with no metrics; Phase 7 replaces them from each repo. Sentinel Six team wording still needs the team's OK.
 - **Placeholders:** `assets.poster` points at generated SVGs (`public/projects/<id>/poster.svg`), not the `poster.webp` in docs/CONTENT.md; the list view draws the same ring inline (`components/hud/Poster.tsx`) instead of requesting them. All 8 projects are `coming-soon`; the 4 public repos link to GitHub.
