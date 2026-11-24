@@ -16,7 +16,8 @@ function point(degrees: number, radius: number): string {
 /**
  * Placeholder poster: a segmented ring with this project's position lit. Drawn as
  * inline SVG on the server, so it costs no image request and can never be the
- * Largest Contentful Paint element — the hero text is. Colors come from the tokens.
+ * Largest Contentful Paint element — the hero text is. Accent on accent-soft
+ * (docs/DESIGN.md "Project art"); colors come from the tokens.
  */
 function PosterPlaceholder({ order, total }: { order: number; total: number }) {
   const step = 360 / total;
@@ -35,7 +36,7 @@ function PosterPlaceholder({ order, total }: { order: number; total: number }) {
         cx={CENTER.x}
         cy={CENTER.y}
         r={INNER_RADIUS}
-        stroke="var(--line)"
+        stroke="var(--glow)"
         strokeOpacity={0.5}
         strokeWidth={2}
       />
@@ -47,7 +48,9 @@ function PosterPlaceholder({ order, total }: { order: number; total: number }) {
           <path
             key={index}
             d={`M${point(start, RING_RADIUS)} A${RING_RADIUS} ${RING_RADIUS} 0 0 1 ${point(end, RING_RADIUS)}`}
-            stroke={lit ? "var(--accent)" : "var(--line)"}
+            stroke={lit ? "var(--accent)" : "var(--glow)"}
+            strokeOpacity={lit ? 1 : 0.55}
+            strokeLinecap="round"
             strokeWidth={lit ? 14 : 6}
           />
         );
