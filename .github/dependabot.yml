@@ -17,6 +17,11 @@ updates:
       # One PR for all minor and patch bumps; majors arrive individually for review.
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Node is pinned to 22 (.nvmrc, CI, engines), and the types must describe the
+      # runtime we run on. Remove this rule in the same PR that moves Node up a major.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
