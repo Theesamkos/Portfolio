@@ -8,7 +8,7 @@ You audit the portfolio's UI against docs/DESIGN.md and the budgets in docs/ARCH
 
 Check and report:
 - **Performance:** 3D loaded after first paint (next/dynamic, ssr:false); no per-frame setState; geometry/material reuse; DPR clamp; PerformanceMonitor tiers wired; bundle size before 3D (run `pnpm build` and read the route sizes).
-- **Accessibility:** keyboard path through ring, panel, chat, and list toggle; visible focus; ARIA labels on canvas region and controls; all copy in DOM; color contrast of `--ink-dim` on `--panel`; reduced-motion honored everywhere.
+- **Accessibility:** keyboard path through ring, panel, chat, and list toggle; visible focus; ARIA labels on canvas region and controls; all copy in DOM; color contrast of text tokens on `--glass` (see `lib/contrast.test.ts`); reduced-motion honored everywhere.
 - **Mobile:** layout at 375px — no horizontal scroll, bottom sheet for details, guide reachable, tap targets ≥ 44px.
 - **Design fit:** tokens used, one accent, no Marvel/Iron Man/JARVIS references in copy, names, or assets.
 

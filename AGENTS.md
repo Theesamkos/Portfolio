@@ -38,25 +38,32 @@ app/
   projects/[id]/page.tsx   # case study pages
   api/guide/route.ts       # AI guide: streamText + tools, rate-limited, token-capped
   actions/request-access.ts# server action → Resend email
-  fonts.ts                 # next/font (Inter, Space Grotesk, JetBrains Mono) → CSS variables
-  globals.css              # design tokens + Tailwind 4 @theme — the only place colors/type are defined
+  fonts.ts                 # next/font (Inter, JetBrains Mono) → CSS variables
+  globals.css              # light glass tokens + Tailwind 4 @theme + `glass` utilities — the only place colors/type/shape are defined
 content/projects.ts        # single source of truth, Zod-validated; exports ProjectId + projectIdSchema
 lib/schema.ts              # Project schema + cross-field rules (no dead or private links)
-lib/site.ts                # name, identity line, contact links (facts from docs/AI_GUIDE.md)
+lib/site.ts                # name, identity line, About copy, nav + contact links (facts from docs/AI_GUIDE.md)
+lib/contrast.ts            # WCAG contrast math; contrast.test.ts holds every text token to AA
+lib/project-position.ts    # "01 / 08" label, shared by server and client components
 lib/env.schema.ts          # pure Zod env parser; next.config.ts runs it so a bad env fails the build
 lib/env.ts                 # `server-only` + parsed env — the only way app code reads env vars
 lib/security-headers.ts    # response headers + CSP (enforced subset, full policy report-only)
 lib/guide/                 # model.ts, system-prompt.ts, tools.ts, evals.ts
-components/hud/            # 2D overlay: panels, readouts, chat, list view (Hero, ProjectList, ProjectCard, Poster, StatusChip)
+components/ui/             # primitives, all Server Components: Button, Chip, GlassPanel, MonoLabel, icons (inline SVG)
+components/hud/            # 2D overlay: NavBar, Hero, ProjectList, ProjectCard, DetailPanel, About, Poster, StatusChip
 components/scene/          # R3F: Renderer, Ring, ProjectPanel, CameraRig, Effects
 store/ui.ts                # Zustand: activeProjectId, filters, viewMode
 e2e/                       # Playwright smoke tests
 .github/workflows/ci.yml   # job `ci`: secret scan, audit, typecheck, lint, format, test, build, e2e
 ```
-As of Phase 2 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions`, `lib/guide/` and `components/scene/` — those arrive in later phases.
+As of Phase 2.5 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions`, `lib/guide/` and `components/scene/` — those arrive in later phases.
 
 **LCP is hero text.** Posters never get `preload`/eager loading; placeholders are inline SVG and real posters are lazy images. `e2e/home.spec.ts` fails if the LCP element is an image or outside the hero.
 **Project ids:** use the `ProjectId` type (derived from `content/projects.ts`), never a bare `string`.
+**Tokens:** only token colors exist in Tailwind (`--color-*: initial`), so `bg-red-500` generates nothing. Colored *text* uses the `-ink` shades (`text-accent-ink`, `text-live-ink`, `text-warn-ink`); the base `accent` / `live` / `warn` are for fills, dots, borders and icons — they fail AA as small text. `pnpm test` fails if a text token drops below 4.5:1.
+**Glass:** build surfaces with `GlassPanel`. Pass `blur={false}` when nothing scrolls behind the pane (cards, About, footer); blur is for the nav, menu and detail panel.
+**Detail panel:** `components/hud/DetailPanel.tsx` is a native `<dialog>` that shows whichever project `activeProjectId` names — open it by calling `focusProject(id)`, never by touching the element. Side panel from 1024px, bottom sheet below. It is modal everywhere except the ring view on desktop (`viewMode === "ring"`), where the ring behind it must stay usable.
+**Client components get data as props.** Never import `content/projects.ts` at runtime from a `"use client"` file (it would ship Zod to the browser); `import type` is fine.
 **Store:** `store/ui.ts` is a module singleton — import it only from client components. Server Components read `content/projects.ts` directly.
 
 **Env vars:** add each new variable to `.env.example` (name only) and to `serverEnvSchema` in `lib/env.schema.ts` as optional; add it to `requiredInProduction` in the phase that first uses it. Never read `process.env` directly in app code.
