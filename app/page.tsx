@@ -1,3 +1,4 @@
+import { DetailPanel } from "@/components/hud/DetailPanel";
 import { Hero } from "@/components/hud/Hero";
 import { NavBar } from "@/components/hud/NavBar";
 import { ProjectList } from "@/components/hud/ProjectList";
@@ -50,6 +51,8 @@ export default function HomePage() {
           </ul>
         </GlassPanel>
       </footer>
+
+      <DetailPanel projects={projects} />
     </>
   );
 }
