@@ -1,40 +1,71 @@
+import type { ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
+import {
+  ArrowRightIcon,
+  DownloadIcon,
+  GitHubIcon,
+  LinkedInIcon,
+  MailIcon,
+} from "@/components/ui/icons";
 import { site } from "@/lib/site";
 
-/** Name, one-line identity and the always-visible contact row. */
+const contactIcons: Record<(typeof site.contact)[number]["label"], ReactNode> = {
+  Email: <MailIcon />,
+  LinkedIn: <LinkedInIcon />,
+  GitHub: <GitHubIcon />,
+};
+
+/**
+ * Name, one-line identity, the two main actions and the contact links
+ * (docs/DESIGN.md). The name is the page's Largest Contentful Paint element, so
+ * nothing here waits on an image or on JavaScript.
+ */
 export function Hero() {
   return (
     <section
       id="top"
       data-hero
       aria-label="Introduction"
-      className="flex flex-col gap-6 pt-12 pb-10 md:pt-20"
+      className="flex flex-col gap-6 pt-12 pb-14 md:gap-8 md:pt-20 md:pb-20"
     >
-      <p className="text-accent-ink tracking-readout font-mono text-xs uppercase">Portfolio</p>
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-extrabold md:text-3xl">{site.name}</h1>
-        <p className="text-ink-dim max-w-2xl text-lg">{site.identity}</p>
+        <p className="text-ink-dim max-w-2xl text-lg font-medium md:text-xl">{site.identity}</p>
       </div>
 
-      <nav aria-label="Contact">
-        <ul className="flex flex-col gap-x-8 sm:flex-row sm:flex-wrap">
-          {site.contact.map(({ label, text, href }) => (
-            <li key={label}>
-              <a
-                href={href}
-                rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer me"}
-                className="group inline-flex min-h-11 items-center gap-2 text-sm"
-              >
-                <span className="text-ink-dim tracking-readout font-mono text-xs uppercase">
+      {/* Under 640px the two buttons stack full-width, then the contact row. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Button href="#projects" icon={<ArrowRightIcon />} iconPosition="end">
+          View projects
+        </Button>
+        <Button
+          href={site.resumeHref}
+          download="Samuel-Orth-Resume.pdf"
+          variant="secondary"
+          icon={<DownloadIcon />}
+        >
+          Download resume
+        </Button>
+
+        <span aria-hidden="true" className="bg-line mx-2 hidden h-8 w-px sm:block" />
+
+        <nav aria-label="Contact">
+          <ul role="list" className="flex flex-wrap gap-x-6">
+            {site.contact.map(({ label, href }) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer me"}
+                  className="text-ink hover:text-accent-ink duration-hover inline-flex min-h-11 items-center gap-2 text-sm font-medium transition-colors"
+                >
+                  {contactIcons[label]}
                   {label}
-                </span>
-                <span className="text-accent-ink break-all underline-offset-4 group-hover:underline">
-                  {text}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </section>
   );
 }
