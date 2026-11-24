@@ -20,27 +20,35 @@ Direction: a modern, light, frosted-glass interface with one electric blue. Clea
 | `--bg-glow-1` | `#dbe7fb` | soft radial glow top-left |
 | `--bg-glow-2` | `#c9dcff` | soft radial glow behind the ring |
 | `--glass` | `rgba(255,255,255,0.62)` | panel fill (with `backdrop-filter: blur(20px)`) |
-| `--glass-strong` | `rgba(255,255,255,0.82)` | nav bar, detail panel |
+| `--glass-strong` | `rgba(255,255,255,0.9)` | nav bar, detail panel (0.82 let content ghost through; the reference is near-opaque) |
 | `--glass-edge` | `rgba(255,255,255,0.85)` | 1px inner highlight on glass |
 | `--line` | `rgba(11,21,38,0.10)` | outer borders, dividers |
 | `--ink` | `#0b1526` | headings, primary text |
 | `--ink-dim` | `#4b5b73` | secondary text (passes AA on `--glass`) |
 | `--accent` | `#1f6bff` | buttons, links, active states, mono labels |
 | `--accent-hover` | `#1557d6` | hover/pressed |
+| `--accent-ink` | `#1557d6` | accent-colored **text**: mono labels, text links, section labels |
 | `--accent-soft` | `#e6efff` | chip fills, hover washes |
-| `--glow` | `#7fb2ff` | 3D halo, bloom tint, focus ring |
-| `--live` | `#16a34a` | LIVE status |
-| `--warn` | `#f59e0b` | COMING SOON status |
+| `--glow` | `#7fb2ff` | 3D halo, bloom tint, poster strokes |
+| `--live` | `#16a34a` | LIVE status dot |
+| `--live-ink` / `--live-soft` | `#166534` / `#e3f5e9` | LIVE chip text / fill |
+| `--warn` | `#f59e0b` | COMING SOON status dot |
+| `--warn-ink` / `--warn-soft` | `#92400e` / `#fdf0d5` | COMING SOON chip text / fill |
+| `--on-accent` | `#ffffff` | text on a solid accent button |
 
-Status chips: **LIVE** green dot + green text; **VIDEO** accent; **COMING SOON** amber; **PRIVATE** / **TEAM** `--ink-dim` outline. (The reference shows LIVE in amber; we use green so status colors stay semantic.)
+Status chips: a dot in the semantic color, mono text in its `-ink` shade, on the `-soft` fill. **LIVE** green; **VIDEO** accent; **COMING SOON** amber; **PRIVATE** / **TEAM** `--ink-dim` outline, no dot. (The reference shows LIVE in amber; we use green so status colors stay semantic.)
+
+**Text contrast.** `--accent`, `--live` and `--warn` are for fills, dots, borders and icons only. As small text on glass they measure 4.04, 2.92 and 1.90 at worst, below WCAG AA (4.5), so text uses the `-ink` shades. `--ink-dim` on `--glass` is 6.61:1 (6.12 over the strongest glow). `lib/contrast.test.ts` computes all of these from `app/globals.css`.
+
+**Focus ring:** 2px `--accent`, 3px offset. Not `--glow`: a focus ring needs 3:1 against the page and `--glow` has about 2:1.
 
 Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on glass panels. No hard drop shadows.
 
 ### Type
 - **Inter** for everything (display and body) via `next/font`. Headings weight 700–800, letter-spacing −0.02em, `text-wrap: balance`.
-- **JetBrains Mono** for readouts: uppercase, 12px, letter-spacing 0.08em, color `--accent` (e.g. `PROJECT 01 / 08`).
+- **JetBrains Mono** for readouts: uppercase, 12px, letter-spacing 0.08em, color `--accent-ink` (e.g. `PROJECT 01 / 08`).
 - Scale: 12 / 14 / 16 / 20 / 28 / 44 / 64 (hero name 64 desktop, 44 mobile).
-- Drop Space Grotesk (it was in the earlier dark spec).
+- Space Grotesk (from the earlier dark spec) is gone.
 
 ### Shape
 - Pills for buttons, chips and the nav bar (`border-radius: 9999px`).
@@ -51,14 +59,14 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 - **Nav bar:** sticky glass pill, 16px from top. Left: name. Center: Projects · About · Resume · Contact (anchor links). Right: "List view" (secondary) and "Contact me" (primary).
 - **Hero (left column):** name (64/800), identity line in `--ink-dim` at 20–28px ("AI engineer building agentic systems that ship."), then a row: "View projects →" (primary), "Download resume" (secondary), a vertical divider, and Email · LinkedIn · GitHub text links with icons.
 - **Ring (center/right, below the hero line):** the 3D scene. Under it, centered: ← button · "Drag or use ← → to explore" · → button.
-- **Detail panel (right, overlays the ring's right edge when a project is active):** glass-strong, 24px radius. Top: mono `PROJECT 01 / 08`, close ×. Title 44/800. Pitch 20 `--ink-dim`. Divider. "Impact" label in accent + 3 bullets with a blue double-check icon. "Stack" label + outline chips. Status chip. Button row: Live demo (primary), Watch video, Code, Case study (secondary). Below the panel: Previous / Next secondary buttons.
+- **Detail panel (right, overlays the ring's right edge when a project is active):** glass-strong, 24px radius. Top: mono `PROJECT 01 / 08`, close ×. Title 44/800. Pitch 20 `--ink-dim`. Divider. "Impact" label in accent + 3 bullets with a blue double-check icon. "Stack" label + outline chips. Status chip. Button row: Live demo (primary), Watch video, Code, Case study (secondary). Previous / Next secondary buttons are pinned to the bottom of the panel so they do not move between projects. The panel is modal in the list view (light backdrop, click outside to close) and non-modal over the ring.
 - **Ask bar (bottom center, docked):** glass pill 56px tall, sparkle icon, placeholder "Ask about my work…", primary "Ask" button inside the pill on the right.
 
-## Mobile (< 768px)
-- Nav collapses to name + List view + a menu button; Contact me moves into the menu.
+## Mobile and tablet (< 1024px)
+- Nav collapses to name + List view + a menu button; Contact me moves into the menu. (The full nav does not fit on one line below about 880px.)
 - Hero stacks; buttons full-width in two rows.
 - Ring becomes a curved swipeable carousel across the full width (three panels visible, center one front); the glass disc and core stay but smaller.
-- Detail panel becomes a bottom sheet (drag handle, 24px top radius) with the same content order.
+- Detail panel becomes a bottom sheet (drag handle, 24px top radius) with the same content order. The handle is visual for now; close with ×, Esc or the backdrop.
 - Ask bar becomes a floating pill button bottom-right that opens a full-screen sheet.
 - Lighter effects tier by default; the reflective floor is off.
 

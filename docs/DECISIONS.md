@@ -2,6 +2,26 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-24 · Card blur is off; blur stays on the nav, menu and detail panel
+- **Context:** all eight cards had `backdrop-filter: blur(20px)`. The only thing behind a card is the page's soft gradient, and the ui-auditor's on/off comparison showed card interiors unchanged. Each blurred card is still a layer the browser re-samples on every scroll frame. Phone frame times were not measured: headless main-thread timing was identical either way and cannot see GPU cost.
+- **Decision:** cards, About and the footer use `GlassPanel blur={false}`. Blur stays where content really passes underneath: the nav bar, the menu and the detail panel.
+- **Consequence:** no visible change, eight fewer backdrop-filter layers. If a later design puts imagery behind the cards, turn the prop back on and measure on a phone first.
+
+## 2026-11-24 · Detail panel and mobile menu use native `<dialog>` and `popover`
+- **Context:** the detail panel must be a side panel on desktop and a bottom sheet on phones, and the mobile menu must work with JavaScript off. A hand-built modal needs a focus-trap library and its own Esc, backdrop and scroll handling.
+- **Decision:** `DetailPanel` is a `<dialog>` driven by `activeProjectId`; side panel from 1024px, bottom sheet below. It opens with `showModal()` everywhere except the ring view on desktop, which uses `show()` so the ring stays draggable. The first build was non-modal on desktop in the list view too; the ui audit showed it covering the right card column while focus could still move underneath, so the list view is modal at every width. The mobile menu is a `popover="auto"` element opened by `popovertarget`. No dependency added.
+- **Consequence:** the browser supplies the focus trap, Esc, backdrop and top layer. Handled in the component: returning focus to whatever selected the project, and ignoring a `close` event that arrives after the panel was reopened. The page scroll is locked behind the sheet in CSS (`html:has(dialog:modal)`, below 1024px only, so no desktop scrollbar shift). jsdom has no dialog methods, so open/close behavior is tested in Playwright.
+
+## 2026-11-24 · Icons are inline SVG, not an icon package
+- **Context:** the page needs about a dozen icons, two of them brand marks (LinkedIn, GitHub) that `lucide-react` no longer ships. The page is near its JavaScript budget.
+- **Decision:** `components/ui/icons.tsx` holds the icons as Server Component SVG. They are decorative (`aria-hidden`); the label next to each carries the meaning.
+- **Consequence:** no dependency, no client JavaScript, no request. Adding an icon means drawing or pasting a path; revisit if the set passes about 30.
+
+## 2026-11-24 · Text uses darker `-ink` shades of the accent and status colors
+- **Context:** the light glass spec colors mono labels and links `--accent` and status text `--live` / `--warn`. On glass those measure 4.04:1, 2.92:1 and 1.90:1 at worst — below WCAG AA for small text, and Lighthouse a11y would drop under the 95 target.
+- **Decision:** add `--accent-ink` (#1557d6), `--live-ink` (#166534) and `--warn-ink` (#92400e) for text; keep the spec colors for fills, dots, borders and icons. Tailwind's default palette is switched off (`--color-*: initial`) so only tokens can be used. The focus ring is `--accent`, not `--glow`, for the same reason.
+- **Consequence:** every text token is at least 4.5:1 on every surface, enforced by `lib/contrast.test.ts`, which reads the values from `app/globals.css`. The look stays close to the reference: the dot carries the semantic color, the text is a darker shade of it.
+
 ## 2026-11-18 · The LCP element is hero text; posters get no loading priority
 - **Context:** the first card's poster sits inside the phone viewport and is larger than any text, so it became the LCP element (2.7s on simulated slow 4G against a 2.5s budget), whether loaded eagerly or lazily.
 - **Decision:** placeholder posters are drawn as inline SVG by `components/hud/Poster.tsx` (no request, not an LCP candidate). Real posters will be lazy `next/image` with no `preload`. An e2e test asserts the LCP element is hero text.
