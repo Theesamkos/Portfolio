@@ -32,8 +32,8 @@ const GLASS_OPACITY = 0.7;
 const FRONT_SCALE = 1.12;
 const OTHER_OPACITY = 0.75;
 const HOVER_LIFT = 0.06;
-/** Bloom's threshold is 1 (Effects.tsx); the front edge is drawn brighter than that. */
-const EDGE_BOOST = 3;
+/** Drawn brighter than bloom's threshold (Effects.tsx) so the front edge glows. */
+const EDGE_BOOST = 12;
 /**
  * How far panels turn with the ring. 0 would keep every panel flat to the camera,
  * 1 would point each straight out from the center; in between, the side panels
@@ -93,9 +93,11 @@ export function ProjectPanel({
   const hovered = useRef(false);
 
   const angle = panelAngle(index, count);
+  // Brighter than bloom's threshold only where there is bloom; on the low tier an
+  // over-bright color would just clip toward white.
   const edgeColor = useMemo(
-    () => new Color(tokens.accent).multiplyScalar(EDGE_BOOST),
-    [tokens.accent],
+    () => new Color(tokens.accent).multiplyScalar(tier === "low" ? 1 : EDGE_BOOST),
+    [tokens.accent, tier],
   );
   const poster = useMemo(() => {
     const svg = posterSvg(order, count, { accent: tokens.accent, glow: tokens.glow });
