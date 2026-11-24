@@ -4,11 +4,9 @@ import { site } from "@/lib/site";
 export function Hero() {
   return (
     <header className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-12 pb-10 md:px-8 md:pt-20">
-      <p className="text-accent tracking-readout font-mono text-xs uppercase">Portfolio</p>
+      <p className="text-accent-ink tracking-readout font-mono text-xs uppercase">Portfolio</p>
       <div className="flex flex-col gap-3">
-        <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          {site.name}
-        </h1>
+        <h1 className="text-2xl font-extrabold md:text-3xl">{site.name}</h1>
         <p className="text-ink-dim max-w-2xl text-lg">{site.identity}</p>
       </div>
 
@@ -24,7 +22,7 @@ export function Hero() {
                 <span className="text-ink-dim tracking-readout font-mono text-xs uppercase">
                   {label}
                 </span>
-                <span className="text-accent break-all underline-offset-4 group-hover:underline">
+                <span className="text-accent-ink break-all underline-offset-4 group-hover:underline">
                   {text}
                 </span>
               </a>

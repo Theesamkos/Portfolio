@@ -1,24 +1,17 @@
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 /**
  * Fonts from docs/DESIGN.md. next/font downloads them at build time and serves them
  * from our own origin, so the browser never contacts Google and `font-src 'self'`
  * in the CSP stays true. Each one exposes a CSS variable that app/globals.css maps
- * to a Tailwind family (font-sans, font-display, font-mono).
+ * to a Tailwind family (font-sans, font-mono).
  */
 
-/** Body and UI. */
+/** Everything: display and body. A variable font, so weights 400–800 are one file. */
 export const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
-});
-
-/** Display: headings and the hero. */
-export const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-space-grotesk",
 });
 
 /**
@@ -34,6 +27,4 @@ export const jetBrainsMono = JetBrains_Mono({
   fallback: ["ui-monospace", "SF Mono", "Menlo", "Consolas", "monospace"],
 });
 
-export const fontVariables = [inter.variable, spaceGrotesk.variable, jetBrainsMono.variable].join(
-  " ",
-);
+export const fontVariables = [inter.variable, jetBrainsMono.variable].join(" ");

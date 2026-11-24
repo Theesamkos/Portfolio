@@ -1,10 +1,10 @@
 import type { ProjectStatus, ProjectVisibility } from "@/lib/schema";
 
-/** Chip colors per docs/DESIGN.md: LIVE accent, VIDEO accent-2, COMING SOON warn. */
+/** Chip colors per docs/DESIGN.md: LIVE green, VIDEO accent, COMING SOON amber (text in the -ink shades). */
 const statusChips: Record<ProjectStatus, { label: string; className: string }> = {
-  live: { label: "Live", className: "border-accent text-accent" },
-  video: { label: "Video", className: "border-accent-2 text-accent-2" },
-  "coming-soon": { label: "Coming soon", className: "border-warn text-warn" },
+  live: { label: "Live", className: "border-live text-live-ink" },
+  video: { label: "Video", className: "border-accent text-accent-ink" },
+  "coming-soon": { label: "Coming soon", className: "border-warn text-warn-ink" },
 };
 
 /** PRIVATE / TEAM get a quiet outline. Public is the default, so it gets no chip. */

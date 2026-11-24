@@ -18,7 +18,7 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
     <article
       id={project.id}
       aria-labelledby={headingId}
-      className="hud-brackets border-line bg-panel relative flex h-full scroll-mt-6 flex-col border"
+      className="glass rounded-panel relative flex h-full flex-col overflow-hidden"
     >
       <Poster project={project} total={total} />
 
@@ -34,7 +34,7 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 id={headingId} className="font-display text-xl font-semibold">
+          <h3 id={headingId} className="text-xl font-bold">
             {project.title}
           </h3>
           <p className="text-base">{project.pitch}</p>
@@ -74,7 +74,7 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
                 <a
                   href={href}
                   rel="noopener noreferrer"
-                  className="border-accent text-accent hover:bg-accent hover:text-bg duration-panel inline-flex min-h-11 items-center border px-4 text-sm font-medium transition-colors"
+                  className="border-accent text-accent-ink hover:bg-accent hover:text-on-accent duration-hover inline-flex min-h-11 items-center border px-4 text-sm font-medium transition-colors"
                 >
                   {linkLabels[kind]}
                   <span className="sr-only">
