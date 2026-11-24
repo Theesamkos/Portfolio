@@ -42,12 +42,12 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
 **Spec:** docs/DESIGN.md "3D scene" + the reference images
-- [ ] Transparent isolated renderer, lazy-loaded after first paint
-- [ ] Glass platform, core with halo, 8 glass panels, lighting + selective bloom
-- [ ] Camera rig + pointer/wheel/swipe/keyboard controls + prev/next
-- [ ] Performance tiers; mobile carousel layout
-- [ ] Intro, reduced motion, live-region announcements, list/ring toggle
-- [ ] Matches reference side by side; ~60fps laptop; JS before 3D < 150 KB gz; phone check
+- [x] Transparent isolated renderer, lazy-loaded after first paint — `Renderer.tsx` is the only Canvas config; the scene is one lazy chunk (`next/dynamic`, `ssr: false`); e2e: mounts with no console errors, list stays if the chunk fails
+- [x] Glass platform, core with halo, 8 glass panels, lighting + selective bloom — glass is a transparent physical material, not transmission (docs/DECISIONS.md); checked by eye at all three tiers, no automated visual test
+- [x] Camera rig + pointer/wheel/swipe/keyboard controls + prev/next — e2e: arrows, Enter, drag, buttons; touch swipe checked by the ui-auditor in an emulated phone, not on a real one; wheel is horizontal only
+- [x] Performance tiers; mobile carousel layout — tiers follow drei `PerformanceMonitor`; `?tier=` pins one; carousel below 1024px, e2e at 375px
+- [x] Intro, reduced motion, live-region announcements, list/ring toggle — intro is the panels' staggered rise only: "name resolves last" and the glow fade-in are not built (the name is the LCP element); reduced motion and the announcements have e2e tests
+- [ ] Matches reference side by side; ~60fps laptop; JS before 3D < 150 KB gz; phone check — measured: 60 fps at every tier (Apple M5, headless Chrome, capped at 60); first-load JS +2.2 KB gz. Open: Sam's side-by-side verdict (screenshots in `docs/screenshots/phase-3/`) and the real phone check
 
 ## Phase 4 — Polish pass on the look
 **Lesson:** the last 10% is where "nice" becomes "what?!".
@@ -83,23 +83,21 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-24 — Phase 2.5 complete on `phase/2.5-visual` (PR #6).** Phases 1 and 2 are merged.
-- **Phone check:** passed on the Vercel preview (Sam). Not tested: Safari, Firefox, a real screen reader.
-- **Sam — securityheaders.com (A or better):** still open from Phase 1. Scan the production URL, then tick the last Phase 1 box.
-- **Checks:** typecheck and lint clean; 118 unit tests; 28 e2e tests (run three times in a row). Lighthouse mobile, local production build: 100 / 100 / 100 / 100, LCP 0.9s, CLS 0. Not run on the preview.
-- **Contrast:** `--ink-dim` on `--glass` is 6.61:1 (6.12:1 over the strongest glow). The spec's `--accent`, `--live` and `--warn` fail AA as small text, so text uses `--accent-ink`, `--live-ink` and `--warn-ink`. `lib/contrast.test.ts` computes every pair from `app/globals.css`.
-- **Changed from the approved plan after the ui audit:** the detail panel is modal in the list view at every width (it covered the right card column while focus could move underneath); it is non-modal only when `viewMode === "ring"` on desktop, so Phase 3 gets the behavior it needs by setting the view mode. The side-panel and full-nav layouts start at 1024px, not 768px. Card blur is off. `--glass-strong` is 0.9, not 0.82. All four are in docs/DECISIONS.md or docs/DESIGN.md.
-- **ui-auditor:** no critical; 2 high, 4 medium, 5 low — all fixed in `fix(a11y): address ui audit findings` except one judgement call left as is: the reference nav pill runs nearly the full viewport width, ours is capped to the 72rem content column.
-- **Resume:** `public/resume.pdf` exists, so "Download resume" and the nav's Resume link point at it (no LinkedIn fallback needed).
-- **Identity line** is now "AI engineer building agentic systems that ship." (from the reference). docs/AI_GUIDE.md still describes the role in its own words; no fact changed.
-- **JavaScript:** the page's scripts went from 176.3 KB to 180.2 KB gzipped (+3.9 KB: Zustand, the detail panel, the card trigger, the menu closer), measured by fetching every script the HTML references. That method reads higher than the ui-auditor's 141 KB from Phase 2, so compare deltas only. **Phase 3 risk stands:** about 5 KB is left of the 150 KB "JS before 3D" budget on the auditor's scale, or the budget needs a logged decision.
-- **"List view"** in the nav is a link to `#projects`. Phase 3 turns it into the ring/list toggle.
-- **Screenshots:** before/after at 1280 and 375 plus the open panel are in `docs/screenshots/phase-2.5/` (WebP, each under 200 KB).
-- **Draft copy:** every `bullets`, `tags` and `stack` value in `content/projects.ts` is a draft with no metrics; Phase 7 replaces them from each repo. The detail panel shows `skills` because `stack` is mostly empty. Sentinel Six team wording still needs the team's OK.
-- **Placeholders:** posters are inline SVG placeholders (`components/hud/Poster.tsx`); all 8 projects are `coming-soon`; the 4 public repos link to GitHub.
-- **Phase 7 watch-out:** real posters load as lazy images with no priority. Re-run Lighthouse when the first real poster lands; two e2e tests fail if the LCP element is an image or sits outside the hero.
-- **Local setup:** the pre-commit hook runs a gitleaks secret scan and fails if gitleaks is missing — `brew install gitleaks` on any new machine.
+**2026-11-24 — Phase 3 built on `phase/3-ring`, waiting on Sam's reference and phone checks.** Phases 1, 2 and 2.5 are merged.
+- **Sam — to close Phase 3:** compare `docs/screenshots/phase-3/` (or the preview) with the two reference images, and try the ring on a real phone: swipe, tap the front panel, the bottom sheet, "List view". Then tick the last box.
+- **Sam — securityheaders.com (A or better):** still open from Phase 1.
+- **Checks:** typecheck and lint clean; 145 unit tests; 43 e2e tests (15 for the ring). e2e runs WebGL in software, so it proves behavior, not speed.
+- **JavaScript:** first-load scripts 184,833 → 187,122 bytes gzipped (+2.2 KB: the loader, its error boundary, the nav toggle), same measuring method as Phase 2.5 — compare deltas only. That is inside the ~5 KB left of the 150 KB budget on the ui-auditor's scale; the budget was not raised. The lazy 3D chunk is 315 KB gzipped, untrimmed.
+- **Frame rate:** 60 fps idle and turning at high, medium and low, at 1440px and 375px, on an Apple M5 in headless Chrome with the GPU on. Headless caps at 60, so this shows no tier drops frames here, not how much headroom there is. Not measured on a mid laptop or any phone.
+- **Not what the plan said:** panel labels are plain DOM moved by the render loop, not drei `Html` (its first instance mounted empty); no transmission material; bloom needed a custom alpha fix and has `mipmapBlur` off; only a horizontal wheel turns the ring; the ring replaces the list only if the visitor is not already using it. All in docs/DECISIONS.md.
+- **Content:** ring order changed (Acme Invoice Agent is now 8, left of the front panel at rest). Acme's bullets come from its repo; "Human-in-the-loop" is gone because the repo has no human approval step, and the database is SQLite, not PostgreSQL. Check docs/AI_GUIDE.md's eval line "agents? → software-factory/acme-invoice-agent" still reads right in Phase 5.
+- **ui-auditor:** 3 high, 5 medium, 8 low. All high and medium fixed with e2e tests; low fixed except the ones under "Later". Not verified by anyone: Safari, Firefox, a real screen reader.
+- **Known gaps against the reference (Phase 4):** placeholder art on every panel, no pitch line or status dot on panels, the left panel's title is clipped at 375px, the ask bar (Phase 5).
+- **`?view=list`** keeps the ring from loading (the list e2e tests use it); **`?tier=high|medium|low`** pins the effects tier. The tier readout shows in `pnpm dev` only.
+- **Draft copy, placeholders, Phase 7 watch-out:** unchanged from Phase 2.5 — every project is `coming-soon`, posters are placeholders, and real posters must not become the LCP element.
+- **Local setup:** `brew install gitleaks` on a new machine. `PORT=3100 pnpm e2e` if port 3000 is taken.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
 - Nav: underline the active section while scrolling · bottom sheet: drag the handle to dismiss · nav pill at full viewport width like the reference
+- Ring: blur on the non-front panels (high tier) · pitch line and status dot on panels · trim the 315 KB 3D chunk · render on demand under reduced motion · Tab from the non-modal panel should reach the ring · "name resolves last" intro · core-to-panel light trace (Phase 5)
