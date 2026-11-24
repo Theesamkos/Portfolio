@@ -7,21 +7,20 @@ import {
   SRGBColorSpace,
   TextureLoader,
   type BufferGeometry,
+  type Camera,
   type Group,
   type Material,
   type MeshBasicMaterial,
+  type Object3D,
   Vector3,
 } from "three";
 import type { ProjectId } from "@/content/projects";
 import { posterSvg } from "@/lib/poster-art";
-import { dampingFor, facing, panelAngle } from "@/lib/ring";
+import { facing, panelAngle } from "@/lib/ring";
 import { useUiStore, type Tier } from "@/store/ui";
 import { ease, ringInput, ringLabels, type IntroClock } from "./input";
-import { LABEL_WIDTH_PX, type RingLayout } from "./layout";
+import type { RingLayout } from "./layout";
 import type { SceneTokens } from "./tokens";
-
-const HOVER_RATE = dampingFor(0.15);
-const STEP_RATE = dampingFor(0.6);
 
 /** Intro (docs/DESIGN.md): each panel rises 24px and fades in, 60ms after the last. */
 const INTRO_STAGGER = 0.06;
@@ -45,6 +44,20 @@ const TURN = 0.62;
 const topLeft = new Vector3();
 const topRight = new Vector3();
 const bottomLeft = new Vector3();
+
+/** A point on the pane, in the pane's own space → screen pixels (written into `out`). */
+function toScreen(
+  out: Vector3,
+  pane: Object3D,
+  camera: Camera,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  pane.localToWorld(out.set(x, y, 0.03)).project(camera);
+  out.set((out.x * 0.5 + 0.5) * width, (-out.y * 0.5 + 0.5) * height, 0);
+}
 
 export type PanelGeometry = {
   glass: BufferGeometry;
@@ -91,6 +104,8 @@ export function ProjectPanel({
   const edge = useRef<MeshBasicMaterial>(null);
   const art = useRef<MeshBasicMaterial>(null);
   const hovered = useRef(false);
+  /** The element the hover cursor was set on, so it can be reset on unmount. */
+  const cursorTarget = useRef<HTMLElement | null>(null);
 
   const angle = panelAngle(index, count);
   // Brighter than bloom's threshold only where there is bloom; on the low tier an
@@ -109,7 +124,7 @@ export function ProjectPanel({
   // A panel can unmount while hovered; don't leave the pointer cursor behind.
   useEffect(
     () => () => {
-      if (hovered.current) document.body.style.cursor = "";
+      if (cursorTarget.current) cursorTarget.current.style.cursor = "";
     },
     [],
   );
@@ -137,21 +152,21 @@ export function ProjectPanel({
       const scale = ease(
         body.current.scale.x,
         isFront ? FRONT_SCALE : 1,
-        STEP_RATE,
+        tokens.ringRate,
         delta,
         reducedMotion,
       );
       body.current.scale.setScalar(scale);
       const lift = hovered.current ? HOVER_LIFT : 0;
       body.current.position.y =
-        ease(body.current.position.y - rise, lift, HOVER_RATE, delta, reducedMotion) + rise;
+        ease(body.current.position.y - rise, lift, tokens.hoverRate, delta, reducedMotion) + rise;
       body.current.visible = visible > 0.01;
     }
     if (glass.current) {
       glass.current.opacity = ease(
         glass.current.opacity,
         GLASS_OPACITY * dim * visible,
-        STEP_RATE,
+        tokens.ringRate,
         delta,
         reducedMotion || appear < 1,
       );
@@ -160,7 +175,7 @@ export function ProjectPanel({
       art.current.opacity = ease(
         art.current.opacity,
         dim * visible,
-        STEP_RATE,
+        tokens.ringRate,
         delta,
         reducedMotion || appear < 1,
       );
@@ -171,7 +186,7 @@ export function ProjectPanel({
       edge.current.opacity = ease(
         edge.current.opacity,
         glow * visible,
-        HOVER_RATE,
+        tokens.hoverRate,
         delta,
         reducedMotion,
       );
@@ -179,31 +194,33 @@ export function ProjectPanel({
     const label = ringLabels[index];
     if (label && body.current) {
       // Panels at the back sit behind the core and the front panels; DOM text cannot
-      // be hidden by WebGL, so their labels fade out instead.
+      // be hidden by WebGL, so their labels fade out instead. The text itself is not
+      // dimmed with the glass: at 75% it would drop below AA contrast.
       const readable = Math.min(1, Math.max(0, (toCamera - 0.15) / 0.3));
-      const opacity = readable * dim * visible;
-      label.style.opacity = String(opacity);
-      if (opacity > 0.01) {
+      const opacity = (readable * visible).toFixed(2);
+      if (label.style.opacity !== opacity) label.style.opacity = opacity;
+      if (readable * visible > 0.01) {
         // Project three corners of the pane to screen pixels and map the label's box
         // onto them with a CSS matrix: the text then tilts and scales with the glass.
         const halfWidth = layout.panelWidth / 2;
         const halfHeight = layout.panelHeight / 2;
         const { width, height } = state.size;
-        body.current.updateWorldMatrix(true, false);
-        const toScreen = (corner: Vector3, x: number, y: number) => {
-          body.current?.localToWorld(corner.set(x, y, 0.03)).project(state.camera);
-          corner.set((corner.x * 0.5 + 0.5) * width, (-corner.y * 0.5 + 0.5) * height, 0);
-        };
-        toScreen(topLeft, -halfWidth, halfHeight);
-        toScreen(topRight, halfWidth, halfHeight);
-        toScreen(bottomLeft, -halfWidth, -halfHeight);
-        const labelHeight = (LABEL_WIDTH_PX * layout.panelHeight) / layout.panelWidth;
-        const a = (topRight.x - topLeft.x) / LABEL_WIDTH_PX;
-        const b = (topRight.y - topLeft.y) / LABEL_WIDTH_PX;
+        const pane = body.current;
+        pane.updateWorldMatrix(true, false);
+        toScreen(topLeft, pane, state.camera, -halfWidth, halfHeight, width, height);
+        toScreen(topRight, pane, state.camera, halfWidth, halfHeight, width, height);
+        toScreen(bottomLeft, pane, state.camera, -halfWidth, -halfHeight, width, height);
+        const labelWidth = layout.labelWidth;
+        const labelHeight = (labelWidth * layout.panelHeight) / layout.panelWidth;
+        const a = (topRight.x - topLeft.x) / labelWidth;
+        const b = (topRight.y - topLeft.y) / labelWidth;
         const c = (bottomLeft.x - topLeft.x) / labelHeight;
         const d = (bottomLeft.y - topLeft.y) / labelHeight;
-        label.style.transform = `matrix(${a},${b},${c},${d},${topLeft.x},${topLeft.y})`;
-        label.style.zIndex = String(Math.round(toCamera * 10));
+        // Rounded, so a ring at rest produces the same string and no style write.
+        const matrix = `matrix(${a.toFixed(4)},${b.toFixed(4)},${c.toFixed(4)},${d.toFixed(4)},${topLeft.x.toFixed(1)},${topLeft.y.toFixed(1)})`;
+        if (label.style.transform !== matrix) label.style.transform = matrix;
+        const order = String(Math.round(toCamera * 10));
+        if (label.style.zIndex !== order) label.style.zIndex = order;
       }
     }
   });
@@ -229,11 +246,17 @@ export function ProjectPanel({
           onPointerOver={(event) => {
             event.stopPropagation();
             hovered.current = true;
-            document.body.style.cursor = "pointer";
+            // On the element under the pointer: the stage's grab cursor would win
+            // over one set on <body>.
+            const target = event.nativeEvent.target;
+            if (target instanceof HTMLElement) {
+              cursorTarget.current = target;
+              target.style.cursor = "pointer";
+            }
           }}
           onPointerOut={() => {
             hovered.current = false;
-            document.body.style.cursor = "";
+            if (cursorTarget.current) cursorTarget.current.style.cursor = "";
           }}
         >
           {tier === "high" ? (

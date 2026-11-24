@@ -17,7 +17,7 @@ export function ProjectList({
   ring?: ReactNode;
 }) {
   return (
-    <section id="projects" aria-labelledby="projects-heading">
+    <section id="projects" aria-labelledby="projects-heading" className="relative">
       {ring}
       <div data-project-list className="flex flex-col gap-6">
         <div className="border-line flex items-baseline justify-between gap-4 border-b pb-3">

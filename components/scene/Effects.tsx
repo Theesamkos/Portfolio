@@ -61,13 +61,14 @@ const PremultipliedOutput = wrapEffect(PremultipliedOutputEffect);
  * `mipmapBlur` stays off: on a transparent canvas it spreads light across the whole
  * frame and the canvas turns opaque white.
  *
- * High tier: full resolution, 4x multisampling. Medium: half-resolution bloom, no
- * multisampling. Low: no post-processing at all.
+ * High tier: full resolution, 4x multisampling. Medium: half-resolution bloom, 2x
+ * multisampling (the composer bypasses the canvas's own antialiasing, and medium is
+ * what phones get). Low: no post-processing at all.
  */
 export function Effects({ tier }: { tier: Tier }) {
   if (tier === "low") return null;
   return (
-    <EffectComposer multisampling={tier === "high" ? 4 : 0}>
+    <EffectComposer multisampling={tier === "high" ? 4 : 2}>
       <Bloom
         luminanceThreshold={BLOOM_THRESHOLD}
         luminanceSmoothing={0.15}

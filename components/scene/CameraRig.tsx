@@ -2,12 +2,10 @@
 
 import { useFrame } from "@react-three/fiber";
 import { type PerspectiveCamera } from "three";
-import { dampingFor } from "@/lib/ring";
 import { useUiStore } from "@/store/ui";
 import { ease } from "./input";
 import type { RingLayout } from "./layout";
-
-const CAMERA_RATE = dampingFor(0.8);
+import type { SceneTokens } from "./tokens";
 
 /**
  * Moves the camera, every frame, toward where it should be (docs/DESIGN.md: 800ms,
@@ -20,9 +18,11 @@ const CAMERA_RATE = dampingFor(0.8);
  */
 export function CameraRig({
   layout,
+  tokens,
   reducedMotion,
 }: {
   layout: RingLayout;
+  tokens: SceneTokens;
   reducedMotion: boolean;
 }) {
   useFrame((state, delta) => {
@@ -36,8 +36,8 @@ export function CameraRig({
     // A little parallax from the pointer; none under reduced motion.
     const sway = reducedMotion ? 0 : state.pointer.x * 0.18;
 
-    const x = ease(camera.position.x, shift + sway, CAMERA_RATE, delta, reducedMotion);
-    const z = ease(camera.position.z, fit, CAMERA_RATE, delta, reducedMotion);
+    const x = ease(camera.position.x, shift + sway, tokens.cameraRate, delta, reducedMotion);
+    const z = ease(camera.position.z, fit, tokens.cameraRate, delta, reducedMotion);
     camera.position.set(x, layout.cameraHeight, z);
     camera.lookAt(x - sway * 0.6, layout.lookAtY, 0);
   });

@@ -15,8 +15,6 @@ import type { SceneTokens } from "./tokens";
 /** What the ring needs to know about a project — the page passes only this. */
 export type RingProject = { id: ProjectId; title: string; order: number };
 
-/** docs/DESIGN.md "Motion": a ring step takes 600ms, damped. */
-const STEP_RATE = dampingFor(0.6);
 /** While dragging, the ring should stick to the pointer. */
 const DRAG_RATE = dampingFor(0.08);
 
@@ -83,7 +81,7 @@ export function Ring({
     ring.rotation.y = ease(
       ring.rotation.y,
       goal,
-      ringInput.dragging ? DRAG_RATE : STEP_RATE,
+      ringInput.dragging ? DRAG_RATE : tokens.ringRate,
       delta,
       reducedMotion && !ringInput.dragging,
     );

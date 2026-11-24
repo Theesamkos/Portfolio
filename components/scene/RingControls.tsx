@@ -13,12 +13,15 @@ const arrowClass =
  */
 export function RingControls({
   frontTitle,
+  captionId,
   besidePanel,
   onPrevious,
   onNext,
   onOpen,
 }: {
   frontTitle: string;
+  /** Id for the caption; the stage points at it with `aria-describedby`. */
+  captionId: string;
   /** True while the detail panel is open beside the ring (desktop). */
   besidePanel: boolean;
   onPrevious: () => void;
@@ -29,7 +32,7 @@ export function RingControls({
     <div
       // The open panel covers the right of the stage and the ring slides left; the
       // controls follow it so the panel never sits on top of the "next" button.
-      className={`relative flex items-center justify-center gap-4 pt-2 transition-[padding] duration-panel ${besidePanel ? "lg:pr-[32rem]" : ""}`}
+      className={`relative flex items-center justify-center gap-4 pt-2 transition-[padding] duration-panel ${besidePanel ? "lg:pr-(--detail-panel-space)" : ""}`}
     >
       <button
         type="button"
@@ -39,7 +42,10 @@ export function RingControls({
       >
         <ArrowLeftIcon />
       </button>
-      <p className="text-ink-dim text-center text-sm">Drag or use ← → to explore</p>
+      <p id={captionId} className="text-ink-dim text-center text-sm">
+        Drag or use ← → to explore
+        <span className="sr-only">. Enter opens the project in front.</span>
+      </p>
       <button type="button" aria-label="Next project" onClick={onNext} className={arrowClass}>
         <ArrowRightIcon />
       </button>
