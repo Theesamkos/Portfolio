@@ -38,28 +38,16 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
   const dialogRef = useRef<HTMLDialogElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   const index = projects.findIndex((project) => project.id === activeProjectId);
   const project = index === -1 ? null : projects[index];
   const isOpen = project !== null;
 
-  // The store is the source of truth; this keeps the <dialog> element in step with it.
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (isOpen && !dialog.open) {
-      if (viewMode === "ring" && window.matchMedia(DESKTOP).matches) dialog.show();
-      else dialog.showModal();
-    } else if (!isOpen) {
-      if (dialog.open) dialog.close();
-      // Browsers only hand focus back reliably for modal dialogs, so do it here.
-      openerRef.current?.focus();
-      openerRef.current = null;
-    }
-  }, [isOpen, viewMode]);
-
   // Each time the project changes: remember what selected it (so closing returns
   // focus there, not to whatever opened the panel first) and start at the top.
+  // This effect must stay above the one that opens the dialog: opening moves focus
+  // into the dialog, and after that the opener can no longer be read.
   useEffect(() => {
     if (activeProjectId === null) return;
     const active = document.activeElement;
@@ -72,6 +60,23 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
     }
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [activeProjectId]);
+
+  // The store is the source of truth; this keeps the <dialog> element in step with it.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen && !dialog.open) {
+      if (viewMode === "ring" && window.matchMedia(DESKTOP).matches) dialog.show();
+      else dialog.showModal();
+      // Left alone, Chrome puts focus on the scroll area, whose outline is clipped.
+      closeRef.current?.focus();
+    } else if (!isOpen) {
+      if (dialog.open) dialog.close();
+      // Browsers only hand focus back reliably for modal dialogs, so do it here.
+      openerRef.current?.focus();
+      openerRef.current = null;
+    }
+  }, [isOpen, viewMode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -135,6 +140,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
               <button
                 type="button"
                 aria-label="Close project details"
+                ref={closeRef}
                 onClick={() => focusProject(null)}
                 className="text-ink hover:bg-accent-soft duration-hover -mr-2 inline-flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors"
               >

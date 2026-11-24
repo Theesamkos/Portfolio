@@ -138,3 +138,102 @@ test("with reduced motion the ring still works", async ({ page }) => {
   await page.keyboard.press("ArrowRight");
   await expect(status(page)).toHaveText("Math Tiles, project 2 of 8");
 });
+
+/** Routes every script that is not in the first-load HTML — that is, the lazy 3D chunk. */
+async function onLazyScripts(
+  page: Page,
+  handle: (route: import("@playwright/test").Route) => Promise<void>,
+) {
+  const html = await (await page.request.get("/")).text();
+  const firstLoad = new Set([...html.matchAll(/src="([^"]+\.js[^"]*)"/g)].map((match) => match[1]));
+  await page.route("**/_next/static/**/*.js*", async (route) => {
+    const url = new URL(route.request().url());
+    if (firstLoad.has(url.pathname + url.search) || firstLoad.has(url.pathname)) {
+      await route.continue();
+    } else {
+      await handle(route);
+    }
+  });
+}
+
+test("if the 3D chunk fails to load, the list is still the page", async ({ page }) => {
+  await onLazyScripts(page, (route) => route.abort());
+  await page.goto("/");
+  await page.waitForTimeout(3000);
+
+  await expect(page.getByRole("heading", { level: 1, name: "Samuel Orth" })).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(8);
+  await expect(page.locator("canvas")).toHaveCount(0);
+});
+
+test("a visitor already reading the list keeps it when the ring arrives late", async ({ page }) => {
+  await onLazyScripts(page, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    await route.continue();
+  });
+  await page.goto("/");
+
+  const details = page.getByRole("button", { name: "Details: Sentinel Six" });
+  await details.scrollIntoViewIfNeeded();
+  await details.focus();
+  const before = await page.evaluate(() => window.scrollY);
+
+  // The ring becomes available: the nav offers it, and nothing else moves.
+  await expect(page.getByRole("banner").getByRole("button", { name: "Ring view" })).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(page.getByRole("article")).toHaveCount(8);
+  await expect(details).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
+
+  await page.getByRole("banner").getByRole("button", { name: "Ring view" }).click();
+  await expect(page.locator("canvas")).toBeVisible();
+});
+
+test("closing the panel in ring view returns focus to the ring", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openRing(page);
+  await ring(page).focus();
+  await page.keyboard.press("Enter");
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("button", { name: "Close project details" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(ring(page)).toBeFocused();
+});
+
+test("the hero stays clear of the open panel in ring view", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openRing(page);
+  await ring(page).focus();
+  await page.keyboard.press("Enter");
+
+  const panel = (await page.getByRole("dialog").boundingBox())!;
+  const github = (await page
+    .getByRole("navigation", { name: "Contact" })
+    .getByRole("link", { name: "GitHub" })
+    .boundingBox())!;
+  expect(github.x + github.width).toBeLessThanOrEqual(panel.x);
+});
+
+test("the controls under the ring are in the first screen", async ({ page }) => {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 375, height: 812 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await openRing(page);
+    await expect(page.getByRole("button", { name: "Next project" })).toBeInViewport({ ratio: 1 });
+  }
+});
+
+test("a lost WebGL context falls back to the list", async ({ page }) => {
+  await openRing(page);
+  await page.evaluate(() => {
+    const canvas = document.querySelector("canvas")!;
+    const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+  });
+  await expect(page.getByRole("article")).toHaveCount(8);
+});

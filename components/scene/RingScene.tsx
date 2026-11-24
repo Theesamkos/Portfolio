@@ -1,13 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import { indexAfterDrag } from "@/lib/ring";
 import { projectPosition } from "@/lib/project-position";
 import { useUiStore, type Tier } from "@/store/ui";
 import { runRingAction, runRingKey } from "./actions";
 import { useMediaQuery, usePageVisible } from "./hooks";
 import { ringInput, ringLabels } from "./input";
-import { COMPACT_LAYOUT, FULL_LAYOUT, LABEL_WIDTH_PX } from "./layout";
+import { COMPACT_LAYOUT, FULL_LAYOUT } from "./layout";
 import { Renderer } from "./Renderer";
 import type { RingProject } from "./Ring";
 import { RingControls } from "./RingControls";
@@ -40,8 +48,9 @@ function introSeen(): boolean {
  * `components/hud/RingStage.tsx` imports it with `next/dynamic` after first paint,
  * so none of three.js is in the page's first load.
  *
- * Mounting it switches the site to ring view; the server-rendered list stays in the
- * DOM, hidden by CSS (`html[data-view="ring"]`), and comes back with "List view".
+ * Once the first frame is ready it switches the site to ring view; the
+ * server-rendered list stays in the DOM, hidden by CSS (`html[data-view="ring"]`),
+ * and comes back with "List view", on an error, or if the WebGL context is lost.
  */
 export default function RingScene({ projects }: { projects: readonly RingProject[] }) {
   const viewMode = useUiStore((state) => state.viewMode);
@@ -51,6 +60,10 @@ export default function RingScene({ projects }: { projects: readonly RingProject
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const pageVisible = usePageVisible();
   const [onScreen, setOnScreen] = useState(true);
+  // False until the WebGL context exists. Until then the stage is laid out but
+  // invisible and out of the flow, so the list stays put while the scene warms up.
+  const [created, setCreated] = useState(false);
+  const captionId = useId();
   const [announcement, setAnnouncement] = useState("");
   const [tokens] = useState(readSceneTokens);
   const [setup] = useState(() => ({ pinnedTier: tierFromUrl(), skipIntro: introSeen() }));
@@ -65,13 +78,12 @@ export default function RingScene({ projects }: { projects: readonly RingProject
   const layout = desktop ? FULL_LAYOUT : COMPACT_LAYOUT;
   const showing = viewMode === "ring";
 
-  // Mounted = the ring works: switch to it, and hand the list back on unmount.
+  // On mount: pick the first project. On unmount (including after an error caught by
+  // RingStage's boundary): hand the page back to the list.
   useEffect(() => {
     const store = useUiStore.getState();
     const first = projects[0];
     if (store.frontProjectId === null && first) store.setFrontProject(first.id);
-    store.setRingReady(true);
-    store.setViewMode("ring");
     try {
       window.localStorage.setItem(INTRO_KEY, "1");
     } catch {
@@ -84,9 +96,46 @@ export default function RingScene({ projects }: { projects: readonly RingProject
     };
   }, [projects]);
 
+  // The scene can draw: offer the ring, and switch to it — unless the visitor is
+  // already using the list. On a slow connection the 3D chunk can arrive seconds
+  // after they started reading; swapping the page under them then would lose their
+  // place. In that case the nav button offers "Ring view" instead.
+  const onReady = () => {
+    const store = useUiStore.getState();
+    const active = document.activeElement;
+    const engaged =
+      window.scrollY > window.innerHeight / 2 ||
+      store.activeProjectId !== null ||
+      Boolean(active?.closest("[data-project-list]"));
+    store.setRingReady(true);
+    if (!engaged) store.setViewMode("ring");
+    setCreated(true);
+  };
+
+  // A lost WebGL context leaves an empty canvas (phones drop contexts for background
+  // tabs). Show the list until the browser gives the context back.
+  const onContextLost = () => {
+    const store = useUiStore.getState();
+    store.setRingReady(false);
+    store.setViewMode("list");
+  };
+  const onContextRestored = () => {
+    const store = useUiStore.getState();
+    store.setRingReady(true);
+    store.setViewMode("ring");
+  };
+
   // Small screens start one tier down, with the reflective floor off (docs/DESIGN.md).
+  // Set once: after that the tier belongs to the frame-rate monitor.
   useEffect(() => {
-    useUiStore.getState().setTier(setup.pinnedTier ?? (desktop ? "high" : "medium"));
+    const isDesktop = window.matchMedia(DESKTOP).matches;
+    useUiStore.getState().setTier(setup.pinnedTier ?? (isDesktop ? "high" : "medium"));
+  }, [setup.pinnedTier]);
+  // Crossing below 1024px (a rotated tablet) only lowers the ceiling; it never resets
+  // a tier the monitor already stepped down.
+  useEffect(() => {
+    const store = useUiStore.getState();
+    if (!desktop && setup.pinnedTier === null && store.tier === "high") store.setTier("medium");
   }, [desktop, setup.pinnedTier]);
 
   // The list is hidden with CSS keyed on this attribute, so it needs no client code.
@@ -196,22 +245,34 @@ export default function RingScene({ projects }: { projects: readonly RingProject
     <section
       aria-roledescription="carousel"
       aria-label="Featured projects ring"
-      hidden={!showing}
-      className="relative isolate pb-10"
+      hidden={created && !showing}
+      className={
+        created
+          ? "relative isolate pb-6"
+          : "pointer-events-none invisible absolute inset-x-0 top-0 isolate"
+      }
     >
+      {/* The list's "Featured projects" heading is hidden with the list in ring view. */}
+      <h2 className="sr-only">Featured projects</h2>
       <div
         ref={stage}
         role="group"
         tabIndex={0}
-        aria-label={`3D ring of ${count} projects. ${front?.title ?? ""} is in front. Left and right arrow keys turn the ring, Enter opens the project.`}
+        aria-label={`3D ring of ${count} projects. ${front?.title ?? ""} is in front.`}
+        aria-describedby={captionId}
         onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
-        className="ring-stage rounded-sheet relative h-88 cursor-grab lg:h-[clamp(20rem,58svh,34rem)] touch-pan-y -outline-offset-2 active:cursor-grabbing"
+        className="ring-stage rounded-sheet relative h-72 cursor-grab touch-pan-y -outline-offset-2 active:cursor-grabbing lg:h-[clamp(18rem,50svh,30rem)]"
       >
         <Renderer
-          running={showing && onScreen && pageVisible}
+          // Also paused under the phone's bottom sheet, which covers the stage and
+          // would otherwise re-blur a moving canvas every frame.
+          running={(showing || !created) && onScreen && pageVisible && !(panelOpen && !desktop)}
           ceiling={desktop ? "high" : "medium"}
           pinned={setup.pinnedTier !== null}
+          onReady={onReady}
+          onContextLost={onContextLost}
+          onContextRestored={onContextRestored}
         >
           <Scene
             projects={projects}
@@ -231,16 +292,16 @@ export default function RingScene({ projects }: { projects: readonly RingProject
               ref={(node) => {
                 ringLabels[index] = node;
               }}
-              className="text-ink absolute top-0 left-0 flex origin-top-left flex-col justify-between p-5 opacity-0 select-none"
+              className="text-ink absolute top-0 left-0 flex origin-top-left flex-col justify-between p-3 opacity-0 select-none"
               style={{
-                width: LABEL_WIDTH_PX,
-                height: (LABEL_WIDTH_PX * layout.panelHeight) / layout.panelWidth,
+                width: layout.labelWidth,
+                height: (layout.labelWidth * layout.panelHeight) / layout.panelWidth,
               }}
             >
-              <span className="tracking-readout text-ink-dim font-mono text-sm">
+              <span className="tracking-readout text-ink-dim font-mono text-xs">
                 {projectPosition(project.order, count)}
               </span>
-              <span className="text-xl leading-tight font-bold">{project.title}</span>
+              <span className="text-base leading-tight font-bold lg:text-lg">{project.title}</span>
             </div>
           ))}
         </div>
@@ -249,6 +310,7 @@ export default function RingScene({ projects }: { projects: readonly RingProject
 
       <RingControls
         frontTitle={front?.title ?? ""}
+        captionId={captionId}
         besidePanel={panelOpen && desktop}
         onPrevious={() => runRingAction("prev", ids)}
         onNext={() => runRingAction("next", ids)}

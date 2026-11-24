@@ -22,6 +22,12 @@ export type RingLayout = {
   lookAtY: number;
   /** How far the camera slides right when a project is selected (ring moves left). */
   activeShift: number;
+  /**
+   * Width of a panel's DOM label in CSS pixels, close to the front pane's width on
+   * screen — so the label is mapped onto the pane at about 1:1 and its type stays
+   * the size it was set in.
+   */
+  labelWidth: number;
 };
 
 export const FULL_LAYOUT: RingLayout = {
@@ -38,6 +44,7 @@ export const FULL_LAYOUT: RingLayout = {
   cameraHeight: 2.4,
   lookAtY: -0.75,
   activeShift: 1.7,
+  labelWidth: 210,
 };
 
 export const COMPACT_LAYOUT: RingLayout = {
@@ -54,6 +61,7 @@ export const COMPACT_LAYOUT: RingLayout = {
   cameraHeight: 1.6,
   lookAtY: 0.2,
   activeShift: 0,
+  labelWidth: 150,
 };
 
 /** How far the panels stand off the platform. */
@@ -63,6 +71,3 @@ export const PANEL_CLEARANCE = 0.22;
 export function panelCenterY(layout: RingLayout): number {
   return layout.platformY + PANEL_CLEARANCE + layout.panelHeight / 2;
 }
-
-/** Label size in CSS pixels; ProjectPanel maps this box onto the pane each frame. */
-export const LABEL_WIDTH_PX = 320;

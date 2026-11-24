@@ -40,6 +40,8 @@
   --radius-panel-value: 20px;
   --radius-sheet-value: 24px;
   --glass-blur: 20px;
+  /* Room the desktop detail panel takes on the right: its 30rem width plus the gap. */
+  --detail-panel-space: 32rem;
   --glass-shadow: 0 1px 2px rgba(11, 21, 38, 0.06), 0 12px 40px rgba(31, 107, 255, 0.1);
 
   /* Motion */
@@ -150,6 +152,16 @@ html[data-view="ring"] [data-project-list] {
  */
 .ring-stage > :first-child {
   mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+/*
+ * In ring view the desktop detail panel is not modal, so nothing may sit underneath
+ * it: the hero makes room, like the controls under the ring do.
+ */
+@media (min-width: 1024px) {
+  html[data-view="ring"]:has(dialog.detail-panel[open]) [data-hero] {
+    padding-right: var(--detail-panel-space);
+  }
 }
 
 /* The ring sits right under the hero line, so the hero gives up its bottom padding. */

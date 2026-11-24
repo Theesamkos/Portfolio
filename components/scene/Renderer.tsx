@@ -28,6 +28,9 @@ export function Renderer({
   running,
   ceiling,
   pinned,
+  onReady,
+  onContextLost,
+  onContextRestored,
   children,
 }: {
   /** False pauses the render loop (ring off-screen, tab hidden, list view). */
@@ -36,6 +39,11 @@ export function Renderer({
   ceiling: Tier;
   /** True when a tier was forced with `?tier=`; the monitor then leaves it alone. */
   pinned: boolean;
+  /** The WebGL context exists and the first frame is about to be drawn. */
+  onReady: () => void;
+  /** The browser took the context away (memory pressure, backgrounded tab). */
+  onContextLost: () => void;
+  onContextRestored: () => void;
   children: ReactNode;
 }) {
   const tier = useUiStore((state) => state.tier);
@@ -58,7 +66,17 @@ export function Renderer({
       dpr={DPR[tier]}
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       camera={{ fov: 30, near: 0.1, far: 60, position: [0, 2.6, 12] }}
-      onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+      onCreated={({ gl }) => {
+        gl.setClearColor(0x000000, 0);
+        // preventDefault tells the browser we will handle a restore; until then the
+        // page falls back to the list instead of showing an empty stage.
+        gl.domElement.addEventListener("webglcontextlost", (event) => {
+          event.preventDefault();
+          onContextLost();
+        });
+        gl.domElement.addEventListener("webglcontextrestored", onContextRestored);
+        onReady();
+      }}
     >
       <PerformanceMonitor
         flipflops={3}

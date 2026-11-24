@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import type { RingProject } from "@/components/scene/Ring";
 
 /**
@@ -10,7 +10,28 @@ import type { RingProject } from "@/components/scene/Ring";
  * `import type` above and a dynamic `import()` here, so nothing from
  * `components/scene` lands in the page's first-load JavaScript.
  */
-const RingScene = dynamic(() => import("@/components/scene/RingScene"), { ssr: false });
+const RingScene = dynamic(
+  // A chunk that fails to download (flaky network, a deploy that replaced it) must
+  // not take the page down: resolve to nothing and the list stays.
+  () => import("@/components/scene/RingScene").catch(() => ({ default: () => null })),
+  { ssr: false },
+);
+
+/**
+ * Anything the 3D scene throws stops here. Without this an error in the lazy chunk
+ * would reach Next's root error screen and replace the whole page, list included.
+ * Rendering nothing unmounts the scene, whose cleanup switches back to the list.
+ * (Error boundaries are still class components — there is no hook for this.)
+ */
+class RingBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 function hasWebGL(): boolean {
   try {
@@ -50,5 +71,9 @@ export function RingStage({ projects }: { projects: readonly RingProject[] }) {
     return () => window.clearTimeout(handle);
   }, []);
 
-  return load ? <RingScene projects={projects} /> : null;
+  return load ? (
+    <RingBoundary>
+      <RingScene projects={projects} />
+    </RingBoundary>
+  ) : null;
 }

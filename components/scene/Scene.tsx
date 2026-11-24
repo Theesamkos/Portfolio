@@ -42,7 +42,7 @@ export function Scene({
         introRef={introRef}
         reducedMotion={reducedMotion}
       />
-      <CameraRig layout={layout} reducedMotion={reducedMotion} />
+      <CameraRig layout={layout} tokens={tokens} reducedMotion={reducedMotion} />
       <Effects tier={tier} />
     </>
   );
