@@ -14,16 +14,17 @@ const haloVertex = /* glsl */ `
 `;
 
 /**
- * The halo's brightness is a number above 1 on purpose: with bloom's threshold at 1
- * (Effects.tsx), this is one of the two things in the scene that glows.
+ * The halo's brightness is well above 1 on purpose: it is one of the two things in
+ * the scene drawn brighter than bloom's threshold (Effects.tsx), so it glows.
  * `uActivity` (0–1) is the hook for the AI guide in Phase 5.
  */
 const haloFragment = /* glsl */ `
   uniform vec3 uColor;
   uniform float uActivity;
   uniform float uPulse;
+  uniform float uBoost;
   void main() {
-    float strength = 3.0 + 0.6 * uPulse + 2.5 * uActivity;
+    float strength = uBoost * (1.0 + 0.2 * uPulse + 0.8 * uActivity);
     gl_FragColor = vec4(uColor * strength, 1.0);
     #include <colorspace_fragment>
   }
@@ -55,8 +56,11 @@ export function Core({
       uColor: { value: new Color(tokens.glow) },
       uActivity: { value: 0 },
       uPulse: { value: 0 },
+      // Above bloom's threshold where there is bloom; on the low tier the halo is
+      // drawn at its plain color, which would otherwise clip toward white.
+      uBoost: { value: tier === "low" ? 1 : 6 },
     }),
-    [tokens],
+    [tokens, tier],
   );
 
   useFrame((state, delta) => {

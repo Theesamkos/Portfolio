@@ -23,7 +23,7 @@ export const BLOOM_THRESHOLD = 1.7;
  * This runs last and hands the output stage a value that survives its conversion:
  * un-multiply, convert, re-multiply, convert back. Bloom adds light with no alpha at
  * all, so alpha is also raised to cover it; the glow then tints the page blue
- * instead of bleaching it.
+ * instead of bleaching it. Over-bright colors keep their hue (see the shader).
  */
 const fragmentShader = /* glsl */ `
   vec3 toSRGB(vec3 c) {
@@ -35,7 +35,13 @@ const fragmentShader = /* glsl */ `
   void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
     float peak = max(inputColor.r, max(inputColor.g, inputColor.b));
     float alpha = clamp(max(inputColor.a, peak), 0.0, 1.0);
-    vec3 straight = clamp(inputColor.rgb / max(alpha, 1e-5), 0.0, 1.0);
+    vec3 straight = inputColor.rgb / max(alpha, 1e-5);
+    // The glow sources are drawn many times brighter than screen white. Clamping each
+    // channel would turn their blue into cyan-white, so colors that far over are
+    // scaled down as a whole and keep their hue. Ordinary highlights just clamp.
+    float brightest = max(straight.r, max(straight.g, straight.b));
+    vec3 scaled = straight / max(brightest, 1.0);
+    straight = mix(clamp(straight, 0.0, 1.0), scaled, smoothstep(1.5, 3.0, brightest));
     outputColor = vec4(toLinear(toSRGB(straight) * alpha), alpha);
   }
 `;
