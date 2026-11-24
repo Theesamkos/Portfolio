@@ -2,6 +2,51 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-24 · The ring takes over the page only when it is ready and the visitor is not using the list
+- **Context:** the first build switched to ring view the moment the lazy chunk mounted. The ui audit showed two failures: on a slow connection the list vanished under a visitor already reading card 5 (scroll position and focus lost, CLS 0.81), and a chunk that failed to load reached Next's root error screen and replaced the whole page.
+- **Decision:** the scene mounts invisibly and out of the flow, and switches to ring view only when its WebGL context exists — and only if the visitor has not scrolled past half a screen, has no panel open and has no focus in the list. Otherwise the nav offers "Ring view". The dynamic import resolves to nothing on failure, an error boundary in `RingStage` catches anything the scene throws, and a lost WebGL context switches back to the list until it is restored.
+- **Consequence:** the list is what the page falls back to in every failure case, each covered by an e2e test. `next dev` appending rules to AGENTS.md is switched off (`agentRules: false`) — unrelated, but found in the same phase.
+
+## 2026-11-24 · The ring has a "front" project that is separate from the selected one
+- **Context:** the store had one field, `activeProjectId`, and the detail panel opens whenever it is set. If arrow keys and drag wrote to it, the panel would open on every step — and below 1024px the panel is a modal sheet that covers the carousel.
+- **Decision:** add `frontProjectId`. Arrow keys, drag, swipe, wheel and the buttons under the ring move it (`setFrontProject`); Enter, Space or a click on the front panel calls `focusProject`. `focusProject` also sets the front, so the ring follows every selection (panel Previous/Next, the guide in Phase 5). While a project is selected, turning the ring moves the selection too, so the open panel always matches the front panel.
+- **Consequence:** one more field, covered by `store/ui.test.ts` and `components/scene/actions.test.ts`. Guide tools keep calling `focusProject` only.
+
+## 2026-11-24 · In ring view the list is hidden with CSS, not removed
+- **Context:** showing the ring and the card grid together brings back the Phase 2.5 audit problem: on desktop the ring view's panel is non-modal, so it would cover cards that can still take focus.
+- **Decision:** the scene sets `data-view="ring"` on `<html>` when it mounts and `app/globals.css` hides `[data-project-list]`. The list stays in the DOM and is the page whenever the ring is not: JavaScript off, no WebGL, `?view=list`, or "List view" in the nav.
+- **Consequence:** no client code is needed to hide the list, and the fallback is the default state, not a code path. List-view e2e tests open `/?view=list`.
+
+## 2026-11-24 · Post-processing on a transparent canvas needs an alpha fix; bloom's mipmap blur stays off
+- **Context:** the canvas is transparent so the page shows through. With `EffectComposer` on, every translucent surface rendered solid white. Cause: the composer blends in linear light and converts to sRGB at the end, after alpha was multiplied in, so pixels end up brighter than their alpha and the browser adds them to the page. Separately, `Bloom mipmapBlur` turned the whole canvas opaque white.
+- **Decision:** `components/scene/Effects.tsx` ends with a small custom effect that un-multiplies, converts and re-multiplies, and raises alpha to cover bloom's added light (so glow tints the page blue instead of bleaching it). `mipmapBlur` is off. Bloom's threshold is 1.7, above lit white glass; only the halo and the front panel's edge are drawn brighter than that.
+- **Consequence:** bloom is selective without a second render or layers. Any new bright material has to stay under 1.7 or it will glow. Checked by eye at all three tiers; there is no automated visual test.
+
+## 2026-11-24 · Panel labels are plain DOM moved by the render loop, not drei `Html`
+- **Context:** the plan was drei `Html` for titles and index labels. With drei 10.7.9 and React 19.3 the first `Html` in the tree mounted empty (it follows tree position: reversing the panels moved the empty one), and each `Html` creates its own React root.
+- **Decision:** `RingScene` renders the eight labels as ordinary DOM over the canvas. Each `ProjectPanel` projects three corners of its pane to screen pixels every frame and writes a CSS `matrix()` onto its label. Labels are `aria-hidden`; the stage's label, the live region and the controls carry the same information in order.
+- **Consequence:** real DOM text with no extra roots. The mapping is affine, so text is not foreshortened within a pane — not noticeable at this field of view. Labels of panels at the back fade out, because DOM cannot be hidden behind WebGL.
+
+## 2026-11-24 · Glass is a transparent physical material, not transmission
+- **Context:** docs/DESIGN.md called for `MeshPhysicalMaterial` with transmission on the high tier. Transmission samples a render of the opaque objects behind the surface; in this scene everything is translucent and the canvas itself is transparent, so there is nothing for it to sample, and it costs an extra pass.
+- **Decision:** high tier uses `MeshPhysicalMaterial` with clearcoat and environment reflections; medium and low use `MeshStandardMaterial`. No transmissive material anywhere. This was decided from how transmission works, not from a side-by-side test.
+- **Consequence:** one render pass fewer on the high tier. If a later design puts opaque art behind the glass, try transmission on the core only.
+
+## 2026-11-24 · The environment map is built in code, not loaded
+- **Context:** drei's `Environment` presets download an HDR file from a third-party CDN. The CSP blocks that, and it would add a request before the scene looks right.
+- **Decision:** `Lighting.tsx` builds the environment from four `Lightformer` panels, rendered once.
+- **Consequence:** no network request, no new CSP source, colors come from tokens.
+
+## 2026-11-24 · Only a horizontal wheel turns the ring
+- **Context:** capturing the vertical wheel over the ring would stop the page from scrolling whenever the pointer is on it — on a page where the ring fills most of the first screen.
+- **Decision:** a horizontal wheel or trackpad swipe steps the ring; vertical scrolling is never intercepted. On touch, `touch-action: pan-y` gives vertical pans to the browser and horizontal ones to the ring.
+- **Consequence:** a mouse with only a vertical wheel uses drag, the arrow keys or the buttons.
+
+## 2026-11-24 · three.js, React Three Fiber, drei and postprocessing added
+- **Context:** Phase 3. Versions checked with `npm view` on the day: three 0.187.0, @react-three/fiber 9.8.2, @react-three/drei 10.7.9, @react-three/postprocessing 3.2.2, postprocessing 6.39.6.
+- **Decision:** all four load only in the lazy scene chunk (`next/dynamic`, `ssr: false`).
+- **Consequence:** first-load JavaScript grew by 2.2 KB gzipped (the loader with its error boundary, and the nav toggle). The lazy chunk is 315 KB gzipped — one chunk, not yet trimmed.
+
 ## 2026-11-24 · Card blur is off; blur stays on the nav, menu and detail panel
 - **Context:** all eight cards had `backdrop-filter: blur(20px)`. The only thing behind a card is the page's soft gradient, and the ui-auditor's on/off comparison showed card interiors unchanged. Each blurred card is still a layer the browser re-samples on every scroll frame. Phone frame times were not measured: headless main-thread timing was identical either way and cannot see GPU cost.
 - **Decision:** cards, About and the footer use `GlassPanel blur={false}`. Blur stays where content really passes underneath: the nav bar, the menu and the detail panel.

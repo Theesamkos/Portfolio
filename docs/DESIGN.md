@@ -73,15 +73,15 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 ## 3D scene (the ring)
 - **Platform:** a wide glass disc with a visible rim and a soft reflection of the panels below (drei `MeshReflectorMaterial` on high tier; a baked gradient "reflection" on low tier).
 - **Core:** a glass sphere at the center with a thin glowing halo ring (torus, emissive `--glow`) tilted slightly. It is the AI guide's presence: slow idle pulse, brighter while the guide is answering, and a light trace from the core to the matching panel when the guide calls `focusProject`.
-- **Panels:** 8 rounded glass planes (20px radius) on the ring, tilted to face the camera path. Each shows the project's icon/poster and title; the index label (`01 / 08`) is DOM text, not texture. Active panel: scales to 1.12, moves to the front, full opacity, blue edge glow. Others: 0.75 opacity, slight blur on high tier.
-- **Light:** soft studio lighting, a cool key from the top-left, environment map for the glass. Bloom only on the halo and active edges, low threshold-high intensity so the page never looks foggy.
-- **Materials:** `MeshPhysicalMaterial` with transmission on high tier; transparent `MeshStandardMaterial` on medium/low. Never more than one transmissive material type.
+- **Panels:** 8 rounded glass planes (20px radius) on the ring, tilted to face the camera path. Each shows the project's icon/poster; the title and the index label (`01 / 08`) are DOM text laid over the pane, not texture. Front panel: scales to 1.12, full opacity, blue edge glow. Others: 0.75 opacity. (Blur on the other panels is not built — see PLAN "Later".)
+- **Light:** soft studio lighting, a cool key from the top-left, environment map for the glass. Bloom only on the halo and the front panel's edge: the threshold sits above lit glass and only those two are drawn brighter, so the page never looks foggy.
+- **Materials:** transparent `MeshPhysicalMaterial` with clearcoat on high tier; transparent `MeshStandardMaterial` on medium/low. No transmission (docs/DECISIONS.md).
 - **Background:** the DOM page background shows through the transparent canvas; add a few large, very soft blue blobs as DOM gradients behind the canvas, not in WebGL.
 
 ## Motion
 | Interaction | Duration | Easing |
 |---|---|---|
-| Ring step / snap | 600ms | damped (useFrame lerp, no React state per frame) |
+| Ring step / snap | 600ms | damped (useFrame, delta-based damping on refs — not a fixed-factor lerp, which runs faster on 120Hz screens; no React state per frame) |
 | Camera ease to active panel | 800ms | damped |
 | Detail panel open | 240ms | ease-out, slide 16px + fade |
 | Intro | ≤ 1.2s: background glows fade in, ring panels rise 24px and fade in staggered 60ms, name resolves last. Skipped on repeat visits and under reduced motion. No "boot sequence" text. |
@@ -89,11 +89,13 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 `prefers-reduced-motion`: no auto-rotate, no intro, instant camera moves, no stagger.
 
 ## Performance tiers (drei `PerformanceMonitor`)
-| Tier | Reflection | Transmission | Bloom | DPR |
+| Tier | Reflection | Glass material | Bloom | DPR |
 |---|---|---|---|---|
-| High | on | on | on | up to 2 |
-| Medium | off (baked) | off | on (low res) | 1.5 |
-| Low | off | off | off | 1 |
+| High | on | physical, clearcoat | on | up to 2 |
+| Medium | off (baked) | standard | on (half res) | up to 1.5 |
+| Low | off (baked) | standard | off | 1 |
+
+Below 1024px the ceiling is Medium. `?tier=high|medium|low` pins a tier for testing.
 
 ## Project art
 Each project needs a simple 3D-feeling icon in the reference's style (isometric glass layers, a lens, a network, a wave). Until real art exists, use a generated SVG per project in `--accent` on `--accent-soft`. Phase 7 replaces them. Posters are `public/projects/<id>/poster.webp`, 1600×1000.
