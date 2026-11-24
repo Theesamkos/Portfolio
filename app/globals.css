@@ -135,6 +135,28 @@ html {
   }
 }
 
+/*
+ * Ring view. The 3D scene sets `data-view="ring"` on <html> once it has loaded; the
+ * server-rendered list stays in the DOM and is only hidden here. No WebGL, no
+ * JavaScript or "List view" chosen: the attribute is absent or "list" and the list shows.
+ */
+html[data-view="ring"] [data-project-list] {
+  display: none;
+}
+
+/*
+ * The canvas is a rectangle; the scene can run past it (the selected state slides the
+ * ring left). Fade the left and right edges so there is never a hard cut.
+ */
+.ring-stage > :first-child {
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+/* The ring sits right under the hero line, so the hero gives up its bottom padding. */
+html[data-view="ring"] [data-hero] {
+  padding-bottom: 1rem;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

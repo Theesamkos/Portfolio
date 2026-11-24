@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/Button";
 import { GlassPanel } from "@/components/ui/GlassPanel";
-import { ListIcon, MenuIcon } from "@/components/ui/icons";
+import { MenuIcon } from "@/components/ui/icons";
 import { navLinks, site } from "@/lib/site";
 import { NavMenu } from "./NavMenu";
+import { ViewToggle } from "./ViewToggle";
 
 const MENU_ID = "site-menu";
 
@@ -14,7 +15,8 @@ const linkClass =
  * and "Contact me". Under 1024px: name, "List view" and a menu button; the links and
  * "Contact me" move into the menu. Everything is a plain link, so it works without JS.
  *
- * "List view" jumps to the project list for now; Phase 3 turns it into the ring/list toggle.
+ * "List view" is a link to the project list until the ring has loaded, then a toggle
+ * between the ring and the list (ViewToggle).
  */
 export function NavBar() {
   const email = site.contact[0];
@@ -46,10 +48,7 @@ export function NavBar() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
-          <Button href="#projects" variant="secondary" icon={<ListIcon />} className="px-4">
-            {/* Icon only under 360px, where the label would push the bar off-screen. */}
-            <span className="max-[359px]:sr-only">List view</span>
-          </Button>
+          <ViewToggle />
           {/* The wrapper hides it: `hidden` on the Button would lose to its own `inline-flex`. */}
           <span className="hidden lg:contents">
             <Button href={email.href}>Contact me</Button>

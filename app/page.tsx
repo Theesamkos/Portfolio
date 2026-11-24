@@ -3,13 +3,18 @@ import { DetailPanel } from "@/components/hud/DetailPanel";
 import { Hero } from "@/components/hud/Hero";
 import { NavBar } from "@/components/hud/NavBar";
 import { ProjectList } from "@/components/hud/ProjectList";
+import { RingStage } from "@/components/hud/RingStage";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { projects } from "@/content/projects";
 import { site } from "@/lib/site";
 
+/** The ring gets only the fields it draws, so the rest of the content stays on the server. */
+const ringProjects = projects.map(({ id, title, order }) => ({ id, title, order }));
+
 /**
  * The list view — the real site. The content is all Server Components, so it arrives
- * as HTML and works with JavaScript off. The 3D ring is layered on top of it in Phase 3.
+ * as HTML and works with JavaScript off. The 3D ring loads after first paint
+ * (RingStage) and takes the list's place until "List view" is chosen.
  */
 export default function HomePage() {
   return (
@@ -25,7 +30,7 @@ export default function HomePage() {
 
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 md:px-8">
         <Hero />
-        <ProjectList projects={projects} />
+        <ProjectList projects={projects} ring={<RingStage projects={ringProjects} />} />
         <About />
       </main>
 
