@@ -170,14 +170,17 @@ const [firstId, ...otherIds] = seed.map((project) => project.id);
 /** Zod enum of the project ids. The AI guide's tool inputs use this in Phase 5. */
 export const projectIdSchema = projectIdEnum([firstId, ...otherIds] as [ProjectId, ...ProjectId[]]);
 
+/** A validated project whose id is one of the known ids. */
+export type FeaturedProject = Project & { id: ProjectId };
+
 /** Validated at module load, sorted by ring position. */
-export const projects: readonly (Project & { id: ProjectId })[] = z
+export const projects: readonly FeaturedProject[] = z
   .array(projectSchema)
   .parse(seed)
   .map((project) => ({ ...project, id: projectIdSchema.parse(project.id) }))
   .sort((a, b) => a.order - b.order);
 
-export function getProject(id: ProjectId): Project & { id: ProjectId } {
+export function getProject(id: ProjectId): FeaturedProject {
   const project = projects.find((candidate) => candidate.id === id);
   if (!project) throw new Error(`Unknown project id: ${id}`);
   return project;

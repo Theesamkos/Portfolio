@@ -1,8 +1,9 @@
 import { Chip } from "@/components/ui/Chip";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { MonoLabel } from "@/components/ui/MonoLabel";
-import type { Project } from "@/lib/schema";
+import type { FeaturedProject } from "@/content/projects";
 import { Poster } from "./Poster";
+import { ProjectCardTrigger } from "./ProjectCardTrigger";
 import { ProjectLinks } from "./ProjectLinks";
 import { StatusChip, VisibilityChip } from "./StatusChip";
 
@@ -11,8 +12,11 @@ export function projectPosition(order: number, total: number): string {
   return `${String(order).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
 }
 
-/** One project in the list view: a pane of glass. A Server Component — plain HTML. */
-export function ProjectCard({ project, total }: { project: Project; total: number }) {
+/**
+ * One project in the list view: a pane of glass. A Server Component — plain HTML;
+ * the only client JavaScript is the small "Details" trigger.
+ */
+export function ProjectCard({ project, total }: { project: FeaturedProject; total: number }) {
   const headingId = `${project.id}-title`;
 
   return (
@@ -62,7 +66,13 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
           ))}
         </ul>
 
-        <ProjectLinks project={project} className="mt-auto pt-1" />
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
+          {/* Above the trigger's stretched click layer, so the links stay clickable. */}
+          <ProjectLinks project={project} className="relative z-10" />
+          <span className="ml-auto">
+            <ProjectCardTrigger id={project.id} title={project.title} />
+          </span>
+        </div>
       </div>
     </GlassPanel>
   );

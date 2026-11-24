@@ -1,9 +1,9 @@
 import { MonoLabel } from "@/components/ui/MonoLabel";
-import type { Project } from "@/lib/schema";
+import type { FeaturedProject } from "@/content/projects";
 import { ProjectCard } from "./ProjectCard";
 
 /** The list view: every project, server-rendered, in ring order. */
-export function ProjectList({ projects }: { projects: readonly Project[] }) {
+export function ProjectList({ projects }: { projects: readonly FeaturedProject[] }) {
   return (
     <section id="projects" aria-labelledby="projects-heading" className="flex flex-col gap-6">
       <div className="border-line flex items-baseline justify-between gap-4 border-b pb-3">
