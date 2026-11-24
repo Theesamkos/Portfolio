@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3000;
+// `PORT=3100 pnpm e2e` runs the suite on another port when 3000 is taken.
+const PORT = Number(process.env.PORT ?? 3000);
 const isCI = Boolean(process.env.CI);
 
 export default defineConfig({

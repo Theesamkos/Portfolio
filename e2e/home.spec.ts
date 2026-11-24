@@ -1,5 +1,12 @@
 import { expect, test } from "@playwright/test";
 
+/**
+ * The ring replaces the list once it has loaded (e2e/ring.spec.ts covers it). Tests of
+ * the list itself open the page with `?view=list`, which keeps the ring from loading.
+ * Tests that go to "/" run with the ring on the page.
+ */
+const LIST = "/?view=list";
+
 test("home page renders", async ({ page }) => {
   const response = await page.goto("/");
 
@@ -36,7 +43,7 @@ test("home page loads without console errors or CSP violations", async ({ page }
 
 test.describe("list view", () => {
   test("renders all 8 project cards with a contact row", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(LIST);
 
     await expect(page.getByRole("article")).toHaveCount(8);
     const contact = page.getByRole("navigation", { name: "Contact" });
@@ -47,7 +54,7 @@ test.describe("list view", () => {
   test("keyboard: first Tab reaches the skip link, which is visible when focused", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto(LIST);
     await page.keyboard.press("Tab");
 
     const skipLink = page.getByRole("link", { name: "Skip to projects" });
@@ -63,7 +70,7 @@ test.describe("list view", () => {
       }
     });
 
-    await page.goto("/");
+    await page.goto(LIST);
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
     await expect(page.locator("article > svg")).toHaveCount(8);
@@ -80,7 +87,7 @@ for (const viewport of [
 ]) {
   test(`largest contentful paint is hero text at ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.goto(LIST);
 
     const lcp = await page.evaluate(
       () =>
@@ -104,7 +111,7 @@ test.describe("list view at 375px", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test("shows 8 cards with no horizontal scroll", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(LIST);
 
     await expect(page.getByRole("article")).toHaveCount(8);
     const { scrollWidth, clientWidth } = await page.evaluate(() => ({
@@ -115,7 +122,7 @@ test.describe("list view at 375px", () => {
   });
 
   test("keeps a 16px gutter around every card", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(LIST);
 
     for (const card of await page.getByRole("article").all()) {
       const box = await card.boundingBox();
@@ -172,7 +179,7 @@ test.describe("list view with JavaScript disabled", () => {
 test.describe("nav bar", () => {
   test("at 1280px: sticky, with section links, List view and Contact me", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto("/");
+    await page.goto(LIST);
 
     const banner = page.getByRole("banner");
     const primary = page.getByRole("navigation", { name: "Primary" });
@@ -203,7 +210,7 @@ test.describe("nav bar", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
+    await page.goto(LIST);
 
     const banner = page.getByRole("banner");
     await expect(banner.getByRole("link", { name: "Samuel Orth" })).toBeVisible();
@@ -238,7 +245,7 @@ for (const viewport of [
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
     test("a card click opens it; close button, Esc and focus return all work", async ({ page }) => {
-      await page.goto("/");
+      await page.goto(LIST);
       const dialog = page.getByRole("dialog");
       const trigger = page.getByRole("button", { name: "Details: Math Tiles" });
       await expect(dialog).toBeHidden();
@@ -286,7 +293,7 @@ for (const viewport of [
     test("Next and Previous move between projects; links in a card still work", async ({
       page,
     }) => {
-      await page.goto("/");
+      await page.goto(LIST);
       const dialog = page.getByRole("dialog");
 
       await page.getByRole("button", { name: "Details: Software Factory" }).click();
@@ -312,7 +319,7 @@ for (const viewport of [
     test("the page behind a sheet does not scroll, and a click outside closes it", async ({
       page,
     }) => {
-      await page.goto("/");
+      await page.goto(LIST);
       const dialog = page.getByRole("dialog");
       await page.getByRole("button", { name: "Details: ChatBridge" }).click();
       await expect(dialog).toBeVisible();
@@ -331,7 +338,7 @@ for (const viewport of [
     });
 
     test("Previous and Next stay put from project to project", async ({ page }) => {
-      await page.goto("/");
+      await page.goto(LIST);
       const dialog = page.getByRole("dialog");
       await page.getByRole("button", { name: "Details: Software Factory" }).click();
       const next = dialog.getByRole("button", { name: "Next" });
@@ -350,7 +357,7 @@ for (const viewport of [
     });
 
     test("no horizontal scroll while the panel is open", async ({ page }) => {
-      await page.goto("/");
+      await page.goto(LIST);
       await page.getByRole("button", { name: "Details: Autonomous Ad Engine" }).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       const { scrollWidth, clientWidth } = await page.evaluate(() => ({
