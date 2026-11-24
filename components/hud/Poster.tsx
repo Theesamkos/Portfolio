@@ -1,17 +1,6 @@
 import Image from "next/image";
+import { POSTER, posterSegments, posterTick } from "@/lib/poster-art";
 import type { Project } from "@/lib/schema";
-
-const RING_RADIUS = 300;
-const INNER_RADIUS = 230;
-const GAP_DEGREES = 6;
-const CENTER = { x: 800, y: 500 };
-
-function point(degrees: number, radius: number): string {
-  const radians = ((degrees - 90) * Math.PI) / 180;
-  const x = CENTER.x + radius * Math.cos(radians);
-  const y = CENTER.y + radius * Math.sin(radians);
-  return `${x.toFixed(1)} ${y.toFixed(1)}`;
-}
 
 /**
  * Placeholder poster: a segmented ring with this project's position lit. Drawn as
@@ -20,46 +9,33 @@ function point(degrees: number, radius: number): string {
  * (docs/DESIGN.md "Project art"); colors come from the tokens.
  */
 function PosterPlaceholder({ order, total }: { order: number; total: number }) {
-  const step = 360 / total;
-  const active = order - 1;
-  const tick = active * step + step / 2;
-
   return (
     <svg
-      viewBox="0 0 1600 1000"
+      viewBox={`0 0 ${POSTER.width} ${POSTER.height}`}
       preserveAspectRatio="xMidYMid slice"
       fill="none"
       aria-hidden="true"
       className="border-line aspect-[16/7] w-full border-b bg-accent-soft"
     >
       <circle
-        cx={CENTER.x}
-        cy={CENTER.y}
-        r={INNER_RADIUS}
+        cx={POSTER.center.x}
+        cy={POSTER.center.y}
+        r={POSTER.innerRadius}
         stroke="var(--glow)"
         strokeOpacity={0.8}
         strokeWidth={2}
       />
-      {Array.from({ length: total }, (_, index) => {
-        const start = index * step + GAP_DEGREES / 2;
-        const end = (index + 1) * step - GAP_DEGREES / 2;
-        const lit = index === active;
-        return (
-          <path
-            key={index}
-            d={`M${point(start, RING_RADIUS)} A${RING_RADIUS} ${RING_RADIUS} 0 0 1 ${point(end, RING_RADIUS)}`}
-            stroke={lit ? "var(--accent)" : "var(--glow)"}
-            strokeOpacity={lit ? 1 : 0.9}
-            strokeLinecap="round"
-            strokeWidth={lit ? 14 : 6}
-          />
-        );
-      })}
-      <path
-        d={`M${point(tick, INNER_RADIUS)} L${point(tick, RING_RADIUS - 20)}`}
-        stroke="var(--accent)"
-        strokeWidth={3}
-      />
+      {posterSegments(order, total).map(({ d, lit }, index) => (
+        <path
+          key={index}
+          d={d}
+          stroke={lit ? "var(--accent)" : "var(--glow)"}
+          strokeOpacity={lit ? 1 : 0.9}
+          strokeLinecap="round"
+          strokeWidth={lit ? 14 : 6}
+        />
+      ))}
+      <path d={posterTick(order, total)} stroke="var(--accent)" strokeWidth={3} />
     </svg>
   );
 }
