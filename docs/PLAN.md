@@ -28,18 +28,33 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] SSR list view (works with JS off), mobile e2e
 - [x] Lighthouse mobile ≥ 90; real phone check — Lighthouse measured locally only (100 against the production build; not run on the preview); phone and Mac checks passed on the Vercel preview (Sam)
 
+## Phase 2.5 — Visual direction: light glass
+**Lesson:** design tokens are a contract; a whole look changes in one file.
+**Spec:** docs/DESIGN.md + docs/design/reference-hero-light.png + reference-ring-light.png
+- [ ] Light glass tokens, Inter + JetBrains Mono, background glows
+- [ ] UI primitives: Button, Chip, GlassPanel, MonoLabel
+- [ ] Sticky glass nav bar (desktop + mobile)
+- [ ] Hero restyled: actions, resume link, contact links
+- [ ] Project cards as glass panels; DetailPanel with mobile bottom sheet
+- [ ] About section (facts from AI_GUIDE.md only)
+- [ ] Contrast ratio reported ≥ 4.5:1; JS-off still complete; Lighthouse mobile ≥ 90; phone check
+
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
-- [ ] Isolated renderer, lazy-loaded after first paint
-- [ ] Ring + camera rig + pointer/wheel/keyboard controls
-- [ ] Live-region announcements, reduced motion, list/ring toggle
-- [ ] ~60fps laptop; JS before 3D < 150 KB gz; phone check
+**Spec:** docs/DESIGN.md "3D scene" + the reference images
+- [ ] Transparent isolated renderer, lazy-loaded after first paint
+- [ ] Glass platform, core with halo, 8 glass panels, lighting + selective bloom
+- [ ] Camera rig + pointer/wheel/swipe/keyboard controls + prev/next
+- [ ] Performance tiers; mobile carousel layout
+- [ ] Intro, reduced motion, live-region announcements, list/ring toggle
+- [ ] Matches reference side by side; ~60fps laptop; JS before 3D < 150 KB gz; phone check
 
-## Phase 4 — HUD look + performance tiers
-**Lesson:** effects budget — measure, then step down.
-- [ ] Bloom, holo material, particles
-- [ ] Performance tiers per docs/DESIGN.md
-- [ ] HUD overlay + detail panel + mobile bottom sheet + skippable intro
+## Phase 4 — Polish pass on the look
+**Lesson:** the last 10% is where "nice" becomes "what?!".
+- [ ] Diff against the reference fixed in order of visual impact
+- [ ] Hover/press states; ring damping tuned; detail panel motion; core-to-panel trace
+- [ ] Placeholder project icons in the reference style
+- [ ] Loading and no-WebGL fallback states
 - [ ] ui-auditor findings fixed; Lighthouse a11y ≥ 95
 
 ## Phase 5 — AI guide
