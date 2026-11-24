@@ -148,5 +148,174 @@ test.describe("list view with JavaScript disabled", () => {
       await expect(card.getByText("Coming soon")).toBeVisible();
     }
     await expect(page.getByRole("link", { name: /^Code/ })).toHaveCount(4);
+
+    // The Details buttons need JavaScript, so they are hidden; nothing else is lost.
+    await expect(page.getByRole("button", { name: /^Details/ })).toHaveCount(0);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "About" }).getByRole("paragraph")).toHaveCount(4);
+    await expect(page.getByRole("link", { name: "Download resume" })).toBeVisible();
+  });
+
+  test("the mobile menu opens without JavaScript (native popover)", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+
+    const menu = page.getByRole("navigation", { name: "Menu" });
+    await expect(menu).toBeHidden();
+    await page.getByRole("button", { name: "Menu" }).click();
+    await expect(menu.getByRole("link", { name: "About" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Contact me" })).toBeVisible();
   });
 });
+
+test.describe("nav bar", () => {
+  test("at 1280px: sticky, with section links, List view and Contact me", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/");
+
+    const banner = page.getByRole("banner");
+    const primary = page.getByRole("navigation", { name: "Primary" });
+    for (const name of ["Projects", "About", "Resume", "Contact"]) {
+      await expect(primary.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+    await expect(banner.getByRole("link", { name: "List view" })).toBeVisible();
+    await expect(banner.getByRole("link", { name: "Contact me" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Menu" })).toBeHidden();
+
+    await primary.getByRole("link", { name: "About" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeInViewport();
+    // Still on screen after scrolling: the bar is sticky.
+    await expect(banner.getByRole("link", { name: "Samuel Orth" })).toBeInViewport();
+    // And the heading it jumped to is not hidden underneath it.
+    const bar = await banner.boundingBox();
+    const heading = await page.getByRole("heading", { level: 2, name: "About" }).boundingBox();
+    expect(heading!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
+  });
+
+  test("the resume link serves a PDF", async ({ request }) => {
+    const response = await request.get("/resume.pdf");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("application/pdf");
+  });
+
+  test("at 375px: name, List view and a menu that holds the links and Contact me", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+
+    const banner = page.getByRole("banner");
+    await expect(banner.getByRole("link", { name: "Samuel Orth" })).toBeVisible();
+    await expect(banner.getByRole("link", { name: "List view" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Primary" })).toBeHidden();
+    await expect(banner.getByRole("link", { name: "Contact me" })).toBeHidden();
+
+    const menuButton = banner.getByRole("button", { name: "Menu" });
+    const box = await menuButton.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+
+    await menuButton.click();
+    const menu = page.getByRole("navigation", { name: "Menu" });
+    for (const name of ["Projects", "About", "Resume", "Contact"]) {
+      await expect(menu.getByRole("link", { name, exact: true })).toBeVisible();
+    }
+    await expect(menu.getByRole("link", { name: "Contact me" })).toBeVisible();
+
+    // Following a link closes the menu and lands on the section.
+    await menu.getByRole("link", { name: "About" }).click();
+    await expect(menu).toBeHidden();
+    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeInViewport();
+  });
+});
+
+for (const viewport of [
+  { width: 375, height: 812, modal: true },
+  { width: 1280, height: 720, modal: false },
+]) {
+  test.describe(`detail panel at ${viewport.width}px`, () => {
+    test.use({ viewport: { width: viewport.width, height: viewport.height } });
+
+    test("a card click opens it; close button, Esc and focus return all work", async ({ page }) => {
+      await page.goto("/");
+      const dialog = page.getByRole("dialog");
+      const trigger = page.getByRole("button", { name: "Details: Math Tiles" });
+      await expect(dialog).toBeHidden();
+
+      // Click the card's poster, not the button: the whole card is the target.
+      await page.getByRole("article", { name: "Math Tiles" }).click({ position: { x: 40, y: 40 } });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole("heading", { level: 2, name: "Math Tiles" })).toBeVisible();
+      await expect(dialog.getByText("Project 02 / 08")).toBeVisible();
+      await expect(dialog.getByRole("link", { name: /^Code/ })).toBeVisible();
+
+      // Bottom sheet (modal) under 768px, side panel (non-modal) from there up.
+      expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(viewport.modal);
+      const bottom = async () => {
+        const rect = (await dialog.boundingBox())!;
+        return Math.round(rect.y + rect.height);
+      };
+      if (viewport.modal) {
+        // Polled: the sheet slides up 16px over 240ms.
+        await expect.poll(bottom).toBe(viewport.height);
+      }
+      const box = (await dialog.boundingBox())!;
+      if (viewport.modal) {
+        expect(box.x).toBe(0);
+        expect(box.width).toBe(viewport.width);
+      } else {
+        expect(box.x).toBeGreaterThan(viewport.width / 2);
+        expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+      }
+
+      await dialog.getByRole("button", { name: "Close project details" }).click();
+      await expect(dialog).toBeHidden();
+      await expect(trigger).toBeFocused();
+
+      // Keyboard path: Enter on the trigger opens, Esc closes, focus comes back.
+      await page.keyboard.press("Enter");
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(trigger).toBeFocused();
+    });
+
+    test("Next and Previous move between projects; links in a card still work", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      const dialog = page.getByRole("dialog");
+
+      await page.getByRole("button", { name: "Details: Software Factory" }).click();
+      await expect(dialog.getByRole("heading", { level: 2 })).toHaveText("Software Factory");
+      await dialog.getByRole("button", { name: "Next" }).click();
+      await expect(dialog.getByRole("heading", { level: 2 })).toHaveText("Math Tiles");
+      await dialog.getByRole("button", { name: "Previous" }).click();
+      await dialog.getByRole("button", { name: "Previous" }).click();
+      await expect(dialog.getByText("Project 08 / 08")).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+
+      // A card's Code link sits above the card-wide click layer: clicking it must
+      // follow the link, not open the panel.
+      const code = page
+        .getByRole("article", { name: "Math Tiles" })
+        .getByRole("link", { name: /^Code/ });
+      await page.route("https://github.com/**", (route) => route.abort());
+      await code.click({ noWaitAfter: true });
+      await expect(dialog).toBeHidden();
+    });
+
+    test("no horizontal scroll while the panel is open", async ({ page }) => {
+      await page.goto("/");
+      await page.getByRole("button", { name: "Details: Autonomous Ad Engine" }).click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+    });
+  });
+}
