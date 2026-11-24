@@ -13,6 +13,63 @@ describe("ui store", () => {
     expect(state().activeProjectId).toBeNull();
     expect(state().filters).toEqual({ skills: [], tags: [] });
     expect(state().viewMode).toBe("list");
+    expect(state().frontProjectId).toBeNull();
+    expect(state().ringReady).toBe(false);
+    expect(state().tier).toBe("high");
+    expect(state().coreActivity).toBe(0);
+  });
+
+  describe("front project (the ring) and active project (the panel)", () => {
+    test("turning the ring does not select a project", () => {
+      state().setFrontProject("math-tiles");
+      expect(state().frontProjectId).toBe("math-tiles");
+      expect(state().activeProjectId).toBeNull();
+    });
+
+    test("selecting a project brings it to the front", () => {
+      state().setFrontProject("math-tiles");
+      state().focusProject("legacylens");
+      expect(state().frontProjectId).toBe("legacylens");
+    });
+
+    test("the front follows every change of selection, wherever it comes from", () => {
+      // The panel's Previous/Next and the guide's tool call both dispatch focusProject.
+      for (const id of ["software-factory", "acme-invoice-agent", "servicecore"] as const) {
+        state().focusProject(id);
+        expect(state().frontProjectId).toBe(id);
+        expect(state().activeProjectId).toBe(id);
+      }
+    });
+
+    test("closing the panel leaves the ring where it is", () => {
+      state().focusProject("legacylens");
+      state().focusProject(null);
+      expect(state().activeProjectId).toBeNull();
+      expect(state().frontProjectId).toBe("legacylens");
+    });
+
+    test("turning the ring while a project is selected moves the selection with it", () => {
+      state().focusProject("legacylens");
+      state().setFrontProject("chatbridge");
+      expect(state().activeProjectId).toBe("chatbridge");
+      expect(state().frontProjectId).toBe("chatbridge");
+    });
+  });
+
+  describe("ring state", () => {
+    test("records readiness and the effects tier", () => {
+      state().setRingReady(true);
+      state().setTier("low");
+      expect(state().ringReady).toBe(true);
+      expect(state().tier).toBe("low");
+    });
+
+    test("core activity is clamped to 0–1", () => {
+      state().setCoreActivity(3);
+      expect(state().coreActivity).toBe(1);
+      state().setCoreActivity(-1);
+      expect(state().coreActivity).toBe(0);
+    });
   });
 
   describe("focusProject", () => {
