@@ -27,13 +27,17 @@ Project {
 | 1 | software-factory | Software Factory | private | A pipeline that turns a written spec into verified, mergeable code | Agent orchestration, multi-model routing, quality gates, CI |
 | 2 | math-tiles | Math Tiles | public | Physical math tiles read by a webcam — live at an AI-driven school | Computer vision, real-time, PWA, edtech |
 | 3 | chatbridge | ChatBridge | public | A K-12 AI tutor that runs sandboxed learning apps inside chat, safely | AI safety, prompt-injection defense, moderation, tRPC |
-| 4 | sentinel-six | Sentinel Six | team | Real-time pose tracking that coaches stance against training doctrine | Pose estimation, rule engines, MediaPipe, product lead |
-| 5 | acme-invoice-agent | Acme Invoice Agent | public | Four LangGraph agents take an invoice from intake to payment with an audit trail | LangGraph, multi-agent, human-in-the-loop |
+| 4 | legacylens | LegacyLens | private | Ask questions of COBOL, Fortran, and C codebases and get cited answers | RAG, code parsing, embeddings, FastAPI |
+| 5 | sentinel-six | Sentinel Six | team | Real-time pose tracking that coaches stance against training doctrine | Pose estimation, rule engines, MediaPipe, product lead |
 | 6 | autonomous-ad-engine | Autonomous Ad Engine | public | Generates ads, grades them on 5 dimensions, and fixes its own failures | Evals, LLM-as-judge, self-healing loops, cost tracking |
-| 7 | legacylens | LegacyLens | private | Ask questions of COBOL, Fortran, and C codebases and get cited answers | RAG, code parsing, embeddings, FastAPI |
-| 8 | servicecore | ServiceCore | private | Field ops platform: GPS-verified time, job costing, payroll, QuickBooks export | Full-stack, geofencing, business logic |
+| 7 | servicecore | ServiceCore | private | Field ops platform: GPS-verified time, job costing, payroll, QuickBooks export | Full-stack, geofencing, business logic |
+| 8 | acme-invoice-agent | Acme Invoice Agent | public | Four LangGraph agents take an invoice from intake to payment with an audit trail | LangGraph, multi-agent, financial operations |
 
 Sentinel Six team credit: Gauntlet AI capstone (G4-Prime-Capstone). Sam = product lead, research lead, wrote code, tuned the biometric/mechanical tracking. Confirm wording with the team before launch.
+
+**Ring order (Phase 3):** positions 1, 2 and 8 are the three panels visible at rest — Acme Invoice Agent to the left of the front panel, Math Tiles to the right.
+
+**Acme Invoice Agent (Phase 3):** its bullets were rewritten from the repo's README and source, tagged `fintech`, with a "Financial operations" skill. "Human-in-the-loop" was removed: approval in the repo is a simulated VP review with a critic loop, not a person, and the database is SQLite.
 
 **Draft copy (Phase 2):** `bullets`, `tags` and `stack` in `content/projects.ts` were drafted from this table and state no metrics. Phase 7 rewrites them from each repo. `stack` lists only technologies named above, so some are empty.
 
