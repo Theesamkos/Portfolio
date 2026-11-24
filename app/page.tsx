@@ -1,3 +1,4 @@
+import { About } from "@/components/hud/About";
 import { DetailPanel } from "@/components/hud/DetailPanel";
 import { Hero } from "@/components/hud/Hero";
 import { NavBar } from "@/components/hud/NavBar";
@@ -25,6 +26,7 @@ export default function HomePage() {
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 md:px-8">
         <Hero />
         <ProjectList projects={projects} />
+        <About />
       </main>
 
       <footer id="contact" className="mx-auto w-full max-w-6xl px-4 pb-8 md:px-8">
