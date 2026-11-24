@@ -24,7 +24,7 @@ const DESKTOP = "(min-width: 768px)";
  *   behind it stays usable, which the ring needs.
  * - Under 768px: opened with `showModal()` — a bottom sheet. The browser supplies
  *   the backdrop, traps focus and closes on Esc.
- * Either way the browser returns focus to the element that opened it on close.
+ * Either way focus returns to the element that opened it on close.
  *
  * `projects` comes in as a prop from the Server Component page: importing
  * `content/projects.ts` here would ship its Zod schema to the browser.
@@ -33,6 +33,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
   const activeProjectId = useUiStore((state) => state.activeProjectId);
   const focusProject = useUiStore((state) => state.focusProject);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
 
   const index = projects.findIndex((project) => project.id === activeProjectId);
   const project = index === -1 ? null : projects[index];
@@ -43,10 +44,16 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (isOpen && !dialog.open) {
+      // Remember what opened it. Browsers only hand focus back reliably for modal
+      // dialogs, so the non-modal side panel has to do it itself.
+      openerRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       if (window.matchMedia(DESKTOP).matches) dialog.show();
       else dialog.showModal();
-    } else if (!isOpen && dialog.open) {
-      dialog.close();
+    } else if (!isOpen) {
+      if (dialog.open) dialog.close();
+      openerRef.current?.focus();
+      openerRef.current = null;
     }
   }, [isOpen]);
 
@@ -76,8 +83,12 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
     <dialog
       ref={dialogRef}
       aria-labelledby="detail-panel-title"
-      // Esc on the modal sheet closes the element itself; tell the store.
-      onClose={() => focusProject(null)}
+      // Esc on the modal sheet closes the element itself; tell the store. The event
+      // arrives a moment after the close, so if the panel was reopened in between
+      // it is stale and must not close the new one.
+      onClose={(event) => {
+        if (!event.currentTarget.open) focusProject(null);
+      }}
       // A click on the backdrop lands on the <dialog> element, not on its content.
       onClick={(event) => {
         if (event.target === event.currentTarget) focusProject(null);
