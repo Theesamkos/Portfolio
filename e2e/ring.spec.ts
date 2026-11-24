@@ -8,7 +8,12 @@ import { expect, test, type Page } from "@playwright/test";
 const ring = (page: Page) => page.getByRole("group", { name: /3D ring of 8 projects/ });
 const status = (page: Page) => page.getByRole("status");
 
-async function openRing(page: Page, url = "/") {
+/**
+ * Opens the page and waits for the ring. Behavior tests pin the low effects tier:
+ * they check keys, focus, drag and the panel, not rendering, and the full pipeline
+ * drawn in software is slow enough on a CI runner to time a test out.
+ */
+async function openRing(page: Page, url = "/?tier=low") {
   await page.goto(url);
   // Software WebGL under parallel tests can take a few seconds to start.
   await expect(page.locator("canvas")).toBeVisible({ timeout: 20_000 });
@@ -24,7 +29,8 @@ test("the ring mounts after first paint, without console errors, and hides the l
   });
   page.on("pageerror", (error) => problems.push(error.message));
 
-  await openRing(page);
+  // The default tier on purpose: this is the one test that runs the full pipeline.
+  await openRing(page, "/");
 
   await expect(ring(page)).toHaveAccessibleName(/Software Factory is in front/);
   // The list is still in the DOM — hidden, not removed.
