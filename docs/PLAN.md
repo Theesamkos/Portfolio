@@ -37,7 +37,7 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] Hero restyled: actions, resume link, contact links
 - [x] Project cards as glass panels; DetailPanel with mobile bottom sheet
 - [x] About section (facts from AI_GUIDE.md only)
-- [ ] Contrast ratio reported ≥ 4.5:1; JS-off still complete; Lighthouse mobile ≥ 90; phone check — first three proven (`--ink-dim` on `--glass` 6.61:1; JS-off e2e passes; Lighthouse mobile 100 locally against the production build). **Phone check is open (Sam)**; tick after it.
+- [x] Contrast ratio reported ≥ 4.5:1; JS-off still complete; Lighthouse mobile ≥ 90; phone check — `--ink-dim` on `--glass` 6.61:1; JS-off e2e passes; Lighthouse mobile 100 locally against the production build (not run on the preview); phone check passed on the Vercel preview (Sam)
 
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
@@ -83,8 +83,8 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-24 — Phase 2.5 built on `phase/2.5-visual`; one box open (phone check, Sam).** Phases 1 and 2 are merged.
-- **Sam — phone check:** on the Vercel preview, check the nav menu, a card tap (bottom sheet opens, page behind does not scroll, Previous / Next, close), and scrolling smoothness. Then tick the last Phase 2.5 box. Not tested here: Safari, Firefox, a real screen reader, a real touch device.
+**2026-11-24 — Phase 2.5 complete on `phase/2.5-visual` (PR #6).** Phases 1 and 2 are merged.
+- **Phone check:** passed on the Vercel preview (Sam). Not tested: Safari, Firefox, a real screen reader.
 - **Sam — securityheaders.com (A or better):** still open from Phase 1. Scan the production URL, then tick the last Phase 1 box.
 - **Checks:** typecheck and lint clean; 118 unit tests; 28 e2e tests (run three times in a row). Lighthouse mobile, local production build: 100 / 100 / 100 / 100, LCP 0.9s, CLS 0. Not run on the preview.
 - **Contrast:** `--ink-dim` on `--glass` is 6.61:1 (6.12:1 over the strongest glow). The spec's `--accent`, `--live` and `--warn` fail AA as small text, so text uses `--accent-ink`, `--live-ink` and `--warn-ink`. `lib/contrast.test.ts` computes every pair from `app/globals.css`.
