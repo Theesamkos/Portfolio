@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <a
         href="#main"
-        className="bg-accent text-bg sr-only z-10 text-sm font-medium focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:px-4 focus:py-2"
+        className="bg-accent text-on-accent sr-only z-10 text-sm font-medium focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:px-4 focus:py-2"
       >
         Skip to projects
       </a>
@@ -29,7 +29,10 @@ export default function HomePage() {
       <footer className="border-line border-t">
         <div className="text-ink-dim mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-6 text-sm md:flex-row md:items-center md:justify-between md:px-8">
           <p>{site.name}</p>
-          <a href={email.href} className="text-accent inline-flex min-h-11 items-center break-all">
+          <a
+            href={email.href}
+            className="text-accent-ink inline-flex min-h-11 items-center break-all"
+          >
             {email.text}
           </a>
         </div>

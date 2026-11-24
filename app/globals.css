@@ -1,47 +1,86 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — the single place colors, type and motion are defined.
- * Source: docs/DESIGN.md. Components use the Tailwind classes generated from the
- * @theme blocks below (text-ink, bg-panel, border-line, font-display, text-xl, ...),
- * never raw hex values.
+ * Design tokens — the single place colors, type, shape and motion are defined.
+ * Source: docs/DESIGN.md (light glass). Components use the Tailwind classes generated
+ * from the @theme blocks below (text-ink, bg-accent, border-line, rounded-panel,
+ * text-xl, ...) and the `glass` utilities, never raw hex values.
  */
 :root {
   /* Color */
-  --bg: #05080f;
-  --bg-glow: #0b1a2e;
-  --panel: rgba(12, 22, 38, 0.72);
-  --line: rgba(110, 200, 255, 0.22);
-  --accent: #3fd0ff;
-  --accent-2: #7cf5d4;
-  --warn: #ffcc66;
-  --ink: #e8f1fb;
-  --ink-dim: #8aa0b8;
+  --bg: #eef2f8;
+  --bg-glow-1: #dbe7fb;
+  --bg-glow-2: #c9dcff;
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-edge: rgba(255, 255, 255, 0.85);
+  --line: rgba(11, 21, 38, 0.1);
+  --ink: #0b1526;
+  --ink-dim: #4b5b73;
+  --accent: #1f6bff;
+  --accent-hover: #1557d6;
+  --accent-soft: #e6efff;
+  --glow: #7fb2ff;
+  --live: #16a34a;
+  --warn: #f59e0b;
+  --on-accent: #ffffff;
+
+  /*
+   * Text-only shades. --accent, --live and --warn are below 4.5:1 as small text on
+   * glass (4.04, 2.92 and 1.90 at worst), so text uses these and the base colors stay
+   * for fills, dots and borders. lib/contrast.test.ts holds the ratios.
+   */
+  --accent-ink: #1557d6;
+  --live-ink: #166534;
+  --warn-ink: #92400e;
+  --live-soft: #e3f5e9;
+  --warn-soft: #fdf0d5;
+
+  /* Shape */
+  --radius-panel-value: 20px;
+  --radius-sheet-value: 24px;
+  --glass-blur: 20px;
+  --glass-shadow: 0 1px 2px rgba(11, 21, 38, 0.06), 0 12px 40px rgba(31, 107, 255, 0.1);
 
   /* Motion */
   --motion-ring: 600ms;
   --motion-camera: 800ms;
-  --motion-panel: 250ms;
-  --motion-scan: 400ms;
+  --motion-panel: 240ms;
+  --motion-hover: 150ms;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* `inline` makes utilities reference the variables above, so one edit there restyles everything. */
 @theme inline {
+  /* Only token colors exist: `bg-red-500` and friends are not generated. */
+  --color-*: initial;
   --color-bg: var(--bg);
-  --color-bg-glow: var(--bg-glow);
-  --color-panel: var(--panel);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-edge: var(--glass-edge);
   --color-line: var(--line);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
-  --color-warn: var(--warn);
   --color-ink: var(--ink);
   --color-ink-dim: var(--ink-dim);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-glow: var(--glow);
+  --color-live: var(--live);
+  --color-live-ink: var(--live-ink);
+  --color-live-soft: var(--live-soft);
+  --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-on-accent: var(--on-accent);
+
+  --radius-panel: var(--radius-panel-value);
+  --radius-sheet: var(--radius-sheet-value);
+  --shadow-glass: var(--glass-shadow);
 
   /* The --font-* variables on the right are set by next/font in app/fonts.ts. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
@@ -65,8 +104,17 @@
 
   /* Data readouts: mono, uppercase, tracked out. */
   --tracking-readout: 0.08em;
+  /* Headings. */
+  --tracking-heading: -0.02em;
 
   --transition-duration-panel: var(--motion-panel);
+  --transition-duration-hover: var(--motion-hover);
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Anchor targets stop below the sticky nav bar (16px offset + 56px bar + air). */
+  scroll-padding-top: 6rem;
 }
 
 body {
@@ -75,52 +123,69 @@ body {
   font-family: var(--font-sans);
 }
 
-/*
- * HUD corner brackets (docs/DESIGN.md): 2px marks on the top-left and bottom-right
- * corners of a panel, in --line. They switch to the accent only when the panel is
- * active: hovered, holding keyboard focus, or marked `data-active` (the ring, Phase 3).
- * The element needs `position: relative`.
- */
-@utility hud-brackets {
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 0 solid var(--line);
-    pointer-events: none;
-    transition: border-color var(--motion-panel) ease-out;
-  }
-  &:hover::before,
-  &:hover::after,
-  &:focus-within::before,
-  &:focus-within::after,
-  &[data-active]::before,
-  &[data-active]::after {
-    border-color: var(--accent);
-  }
-  &::before {
-    top: -1px;
-    left: -1px;
-    border-top-width: 2px;
-    border-left-width: 2px;
-  }
-  &::after {
-    right: -1px;
-    bottom: -1px;
-    border-right-width: 2px;
-    border-bottom-width: 2px;
-  }
+h1,
+h2,
+h3 {
+  letter-spacing: var(--tracking-heading);
+  text-wrap: balance;
 }
 
-/* One visible focus style everywhere; keyboard users must always see where they are. */
+/*
+ * Background glows (docs/DESIGN.md): large, very soft blue light behind everything.
+ * One fixed DOM layer of gradients — not WebGL — so the transparent 3D canvas in
+ * Phase 3 shows it through. Gradients are never Largest Contentful Paint candidates.
+ */
+.bg-glows {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 0% 0%, var(--bg-glow-1), transparent 70%),
+    radial-gradient(56rem 44rem at 78% 42%, var(--bg-glow-2), transparent 68%),
+    radial-gradient(48rem 36rem at 20% 100%, var(--bg-glow-1), transparent 70%);
+}
+
+/*
+ * Glass surfaces. `glass` is a pane: translucent fill, hairline border, a 1px inner
+ * highlight and the soft blue shadow. `glass-strong` is the denser fill for surfaces
+ * that sit over other content (nav bar, detail panel). `glass-blur` frosts whatever
+ * is behind the pane — add it only where content really passes underneath.
+ */
+@utility glass {
+  background-color: var(--glass);
+  border: 1px solid var(--line);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+@utility glass-strong {
+  background-color: var(--glass-strong);
+  border: 1px solid var(--line);
+  box-shadow:
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+@utility glass-blur {
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+/*
+ * One visible focus style everywhere; keyboard users must always see where they are.
+ * --accent, not --glow: the ring needs 3:1 against the page and --glow has about 2:1.
+ */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {

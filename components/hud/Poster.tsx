@@ -29,7 +29,7 @@ function PosterPlaceholder({ order, total }: { order: number; total: number }) {
       preserveAspectRatio="xMidYMid slice"
       fill="none"
       aria-hidden="true"
-      className="border-line aspect-[16/7] w-full border-b bg-[radial-gradient(circle,var(--bg-glow),var(--bg)_70%)]"
+      className="border-line aspect-[16/7] w-full border-b bg-accent-soft"
     >
       <circle
         cx={CENTER.x}
