@@ -10,7 +10,8 @@ import { useUiStore } from "@/store/ui";
  *
  * The `::after` layer stretches the button over the whole card, so a click anywhere
  * on the card opens the panel while the card stays one real button for keyboard and
- * screen-reader users. Links inside the card sit above it (`relative z-10`).
+ * screen-reader users. Links and body copy inside the card sit above it
+ * (`relative z-10`), so links stay clickable and text stays selectable.
  *
  * With JavaScript off the button cannot do anything, so `scripting: none` hides it;
  * the card already shows everything the panel would.

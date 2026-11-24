@@ -175,4 +175,23 @@ describe("home page (list view)", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(useUiStore.getState().activeProjectId).toBeNull();
   });
+
+  test("detail panel is modal in the list view and non-modal only in the ring view", () => {
+    const show = vi.spyOn(HTMLDialogElement.prototype, "show");
+    const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+    render(<HomePage />);
+
+    act(() => useUiStore.getState().focusProject(projects[0]!.id));
+    expect(showModal).toHaveBeenCalledOnce();
+    expect(show).not.toHaveBeenCalled();
+
+    act(() => useUiStore.getState().focusProject(null));
+    act(() => useUiStore.getState().setViewMode("ring"));
+    act(() => useUiStore.getState().focusProject(projects[1]!.id));
+    expect(show).toHaveBeenCalledOnce();
+    expect(showModal).toHaveBeenCalledOnce();
+
+    show.mockRestore();
+    showModal.mockRestore();
+  });
 });

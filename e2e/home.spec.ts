@@ -231,8 +231,8 @@ test.describe("nav bar", () => {
 });
 
 for (const viewport of [
-  { width: 375, height: 812, modal: true },
-  { width: 1280, height: 720, modal: false },
+  { width: 375, height: 812, sheet: true },
+  { width: 1280, height: 720, sheet: false },
 ]) {
   test.describe(`detail panel at ${viewport.width}px`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
@@ -250,20 +250,22 @@ for (const viewport of [
       await expect(dialog.getByText("Project 02 / 08")).toBeVisible();
       await expect(dialog.getByRole("link", { name: /^Code/ })).toBeVisible();
 
-      // Bottom sheet (modal) under 768px, side panel (non-modal) from there up.
-      expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(viewport.modal);
+      // Modal in the list view at every width: nothing behind it can take focus.
+      expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
+      // A bottom sheet under 1024px, a panel on the right from there up.
       const bottom = async () => {
         const rect = (await dialog.boundingBox())!;
         return Math.round(rect.y + rect.height);
       };
-      if (viewport.modal) {
+      if (viewport.sheet) {
         // Polled: the sheet slides up 16px over 240ms.
         await expect.poll(bottom).toBe(viewport.height);
       }
       const box = (await dialog.boundingBox())!;
-      if (viewport.modal) {
+      if (viewport.sheet) {
+        // Full width of the layout viewport (which excludes a classic scrollbar's gutter).
         expect(box.x).toBe(0);
-        expect(box.width).toBe(viewport.width);
+        expect(box.width).toBe(await page.evaluate(() => document.documentElement.clientWidth));
       } else {
         expect(box.x).toBeGreaterThan(viewport.width / 2);
         expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
@@ -307,6 +309,46 @@ for (const viewport of [
       await expect(dialog).toBeHidden();
     });
 
+    test("the page behind a sheet does not scroll, and a click outside closes it", async ({
+      page,
+    }) => {
+      await page.goto("/");
+      const dialog = page.getByRole("dialog");
+      await page.getByRole("button", { name: "Details: ChatBridge" }).click();
+      await expect(dialog).toBeVisible();
+
+      if (viewport.sheet) {
+        const before = await page.evaluate(() => window.scrollY);
+        await page.mouse.move(20, 60);
+        await page.mouse.wheel(0, 600);
+        await page.waitForTimeout(200);
+        expect(await page.evaluate(() => window.scrollY)).toBe(before);
+      }
+
+      await page.mouse.click(20, 60);
+      await expect(dialog).toBeHidden();
+      await expect(page.getByRole("button", { name: "Details: ChatBridge" })).toBeFocused();
+    });
+
+    test("Previous and Next stay put from project to project", async ({ page }) => {
+      await page.goto("/");
+      const dialog = page.getByRole("dialog");
+      await page.getByRole("button", { name: "Details: Software Factory" }).click();
+      const next = dialog.getByRole("button", { name: "Next" });
+      await expect(next).toBeInViewport({ ratio: 1 });
+      await page.waitForTimeout(300);
+      const first = (await next.boundingBox())!;
+
+      for (let step = 0; step < 7; step++) {
+        await next.click();
+        const box = (await next.boundingBox())!;
+        expect(Math.round(box.y)).toBe(Math.round(first.y));
+        // The new project starts at its title, not wherever the last one was scrolled to.
+        await expect(dialog.getByRole("heading", { level: 2 })).toBeInViewport();
+      }
+      await expect(dialog.getByText("Project 08 / 08")).toBeVisible();
+    });
+
     test("no horizontal scroll while the panel is open", async ({ page }) => {
       await page.goto("/");
       await page.getByRole("button", { name: "Details: Autonomous Ad Engine" }).click();
@@ -317,5 +359,30 @@ for (const viewport of [
       }));
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
     });
+  });
+}
+
+// Widths between the designed ones: the smallest phones and a portrait tablet.
+for (const width of [320, 768, 1024]) {
+  test(`layout holds at ${width}px: no horizontal scroll, nav on one line`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+
+    const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+    }));
+    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+
+    const bar = (await page.getByRole("banner").boundingBox())!;
+    expect(bar.height).toBeLessThanOrEqual(60);
+    for (const control of await page
+      .getByRole("banner")
+      .locator("a:visible, button:visible")
+      .all()) {
+      const box = (await control.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(bar.x);
+      expect(box.x + box.width).toBeLessThanOrEqual(bar.x + bar.width);
+    }
   });
 }

@@ -11,7 +11,7 @@ const linkClass =
 
 /**
  * The sticky glass nav bar (docs/DESIGN.md). Desktop: name, anchor links, "List view"
- * and "Contact me". Under 768px: name, "List view" and a menu button; the links and
+ * and "Contact me". Under 1024px: name, "List view" and a menu button; the links and
  * "Contact me" move into the menu. Everything is a plain link, so it works without JS.
  *
  * "List view" jumps to the project list for now; Phase 3 turns it into the ring/list toggle.
@@ -20,17 +20,20 @@ export function NavBar() {
   const email = site.contact[0];
 
   return (
-    <header className="sticky top-4 z-30 mx-auto mt-4 w-full max-w-6xl px-4 md:px-8">
+    <header className="sticky top-4 z-30 mx-auto mt-4 w-full max-w-6xl px-4 lg:px-8">
       <GlassPanel
         strong
         radius="pill"
-        className="flex min-h-14 items-center gap-3 py-1.5 pr-1.5 pl-5 md:pl-6"
+        className="flex min-h-14 items-center gap-3 py-1.5 pr-1.5 pl-5 lg:pl-6"
       >
-        <a href="#top" className="text-ink inline-flex min-h-11 items-center text-lg font-bold">
+        <a
+          href="#top"
+          className="text-ink inline-flex min-h-11 shrink-0 items-center text-lg font-bold whitespace-nowrap"
+        >
           {site.name}
         </a>
 
-        <nav aria-label="Primary" className="mx-auto hidden md:block">
+        <nav aria-label="Primary" className="mx-auto hidden lg:block">
           <ul role="list" className="flex items-center gap-8">
             {navLinks.map(({ label, href }) => (
               <li key={label}>
@@ -42,19 +45,20 @@ export function NavBar() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-2 lg:ml-0">
           <Button href="#projects" variant="secondary" icon={<ListIcon />} className="px-4">
-            List view
+            {/* Icon only under 360px, where the label would push the bar off-screen. */}
+            <span className="max-[359px]:sr-only">List view</span>
           </Button>
           {/* The wrapper hides it: `hidden` on the Button would lose to its own `inline-flex`. */}
-          <span className="hidden md:contents">
+          <span className="hidden lg:contents">
             <Button href={email.href}>Contact me</Button>
           </span>
           <button
             type="button"
             popoverTarget={MENU_ID}
             aria-label="Menu"
-            className="border-line bg-glass text-ink hover:bg-accent-soft duration-hover inline-flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors md:hidden"
+            className="border-line bg-glass text-ink hover:bg-accent-soft duration-hover inline-flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors lg:hidden"
           >
             <MenuIcon />
           </button>
