@@ -18,7 +18,7 @@ export function ProjectList({ projects }: { projects: readonly FeaturedProject[]
       {/* role="list": Safari drops list semantics when list-style is none (Tailwind's reset). */}
       <ol role="list" className="grid gap-6 md:grid-cols-2">
         {projects.map((project) => (
-          <li key={project.id}>
+          <li key={project.id} className="min-w-0">
             <ProjectCard project={project} total={projects.length} />
           </li>
         ))}

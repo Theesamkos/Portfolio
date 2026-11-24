@@ -37,7 +37,7 @@ function PosterPlaceholder({ order, total }: { order: number; total: number }) {
         cy={CENTER.y}
         r={INNER_RADIUS}
         stroke="var(--glow)"
-        strokeOpacity={0.5}
+        strokeOpacity={0.8}
         strokeWidth={2}
       />
       {Array.from({ length: total }, (_, index) => {
@@ -49,7 +49,7 @@ function PosterPlaceholder({ order, total }: { order: number; total: number }) {
             key={index}
             d={`M${point(start, RING_RADIUS)} A${RING_RADIUS} ${RING_RADIUS} 0 0 1 ${point(end, RING_RADIUS)}`}
             stroke={lit ? "var(--accent)" : "var(--glow)"}
-            strokeOpacity={lit ? 1 : 0.55}
+            strokeOpacity={lit ? 1 : 0.9}
             strokeLinecap="round"
             strokeWidth={lit ? 14 : 6}
           />

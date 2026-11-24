@@ -12,7 +12,7 @@
   --bg-glow-1: #dbe7fb;
   --bg-glow-2: #c9dcff;
   --glass: rgba(255, 255, 255, 0.62);
-  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-strong: rgba(255, 255, 255, 0.9);
   --glass-edge: rgba(255, 255, 255, 0.85);
   --line: rgba(11, 21, 38, 0.1);
   --ink: #0b1526;
@@ -115,6 +115,24 @@ html {
   scroll-behavior: smooth;
   /* Anchor targets stop below the sticky nav bar (16px offset + 56px bar + air). */
   scroll-padding-top: 6rem;
+}
+
+/*
+ * The page must not scroll behind the bottom sheet. Only below 1024px, where the
+ * panel is a sheet: phones and tablets have overlay scrollbars, so locking moves
+ * nothing. On desktop a lock would remove a classic scrollbar and shift the page.
+ */
+@media (max-width: 1023.98px) {
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+}
+
+/* The desktop detail panel lines up with the right edge of the 72rem content column. */
+@media (min-width: 1024px) {
+  .detail-panel {
+    right: max(2rem, calc((100vw - 72rem) / 2 + 2rem));
+  }
 }
 
 body {
