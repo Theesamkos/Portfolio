@@ -3,7 +3,12 @@ import { site } from "@/lib/site";
 /** Name, one-line identity and the always-visible contact row. */
 export function Hero() {
   return (
-    <header className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-12 pb-10 md:px-8 md:pt-20">
+    <section
+      id="top"
+      data-hero
+      aria-label="Introduction"
+      className="flex flex-col gap-6 pt-12 pb-10 md:pt-20"
+    >
       <p className="text-accent-ink tracking-readout font-mono text-xs uppercase">Portfolio</p>
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-extrabold md:text-3xl">{site.name}</h1>
@@ -30,6 +35,6 @@ export function Hero() {
           ))}
         </ul>
       </nav>
-    </header>
+    </section>
   );
 }

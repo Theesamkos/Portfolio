@@ -89,7 +89,7 @@ for (const viewport of [
             const entry = list.getEntries().at(-1) as PerformanceEntry & { element?: Element };
             resolve({
               tag: entry.element?.tagName ?? "none",
-              inHero: Boolean(entry.element?.closest("header")),
+              inHero: Boolean(entry.element?.closest("[data-hero]")),
             });
           }).observe({ type: "largest-contentful-paint", buffered: true });
         }),
@@ -132,9 +132,13 @@ test.describe("list view with JavaScript disabled", () => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { level: 1, name: "Samuel Orth" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /samorthtech@gmail\.com/ }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /linkedin/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /github\.com\/Theesamkos$/ })).toBeVisible();
+    const contact = page.getByRole("navigation", { name: "Contact" });
+    await expect(contact.getByRole("link", { name: /email/i })).toBeVisible();
+    await expect(contact.getByRole("link", { name: /linkedin/i })).toBeVisible();
+    await expect(contact.getByRole("link", { name: /github/i })).toBeVisible();
+    await expect(
+      page.getByRole("contentinfo").getByRole("link", { name: "samorthtech@gmail.com" }),
+    ).toBeVisible();
 
     const cards = page.getByRole("article");
     await expect(cards).toHaveCount(8);
