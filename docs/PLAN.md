@@ -31,13 +31,13 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Phase 2.5 — Visual direction: light glass
 **Lesson:** design tokens are a contract; a whole look changes in one file.
 **Spec:** docs/DESIGN.md + docs/design/reference-hero-light.png + reference-ring-light.png
-- [ ] Light glass tokens, Inter + JetBrains Mono, background glows
-- [ ] UI primitives: Button, Chip, GlassPanel, MonoLabel
-- [ ] Sticky glass nav bar (desktop + mobile)
-- [ ] Hero restyled: actions, resume link, contact links
-- [ ] Project cards as glass panels; DetailPanel with mobile bottom sheet
-- [ ] About section (facts from AI_GUIDE.md only)
-- [ ] Contrast ratio reported ≥ 4.5:1; JS-off still complete; Lighthouse mobile ≥ 90; phone check
+- [x] Light glass tokens, Inter + JetBrains Mono, background glows
+- [x] UI primitives: Button, Chip, GlassPanel, MonoLabel
+- [x] Sticky glass nav bar (desktop + mobile)
+- [x] Hero restyled: actions, resume link, contact links
+- [x] Project cards as glass panels; DetailPanel with mobile bottom sheet
+- [x] About section (facts from AI_GUIDE.md only)
+- [ ] Contrast ratio reported ≥ 4.5:1; JS-off still complete; Lighthouse mobile ≥ 90; phone check — first three proven (`--ink-dim` on `--glass` 6.61:1; JS-off e2e passes; Lighthouse mobile 100 locally against the production build). **Phone check is open (Sam)**; tick after it.
 
 ## Phase 3 — 3D project ring
 **Lesson:** the render loop — motion in useFrame on refs.
@@ -83,17 +83,23 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-18 — Phase 2 complete on `phase/2-content-list` (PR #2).** Phase 1 merged (PR #1).
-- **Lighthouse:** local run against the production build scores 100 / 100 / 100 / 100 (performance / a11y / best practices / SEO). It was not run on the Vercel preview; Sam accepted the local result.
-- **Phone and Mac check:** passed on the Vercel preview (Sam).
+**2026-11-24 — Phase 2.5 built on `phase/2.5-visual`; one box open (phone check, Sam).** Phases 1 and 2 are merged.
+- **Sam — phone check:** on the Vercel preview, check the nav menu, a card tap (bottom sheet opens, page behind does not scroll, Previous / Next, close), and scrolling smoothness. Then tick the last Phase 2.5 box. Not tested here: Safari, Firefox, a real screen reader, a real touch device.
 - **Sam — securityheaders.com (A or better):** still open from Phase 1. Scan the production URL, then tick the last Phase 1 box.
-- **Draft copy:** every `bullets`, `tags` and `stack` value in `content/projects.ts` is a draft with no metrics; Phase 7 replaces them from each repo. Sentinel Six team wording still needs the team's OK.
-- **Placeholders:** `assets.poster` points at generated SVGs (`public/projects/<id>/poster.svg`), not the `poster.webp` in docs/CONTENT.md; the list view draws the same ring inline (`components/hud/Poster.tsx`) instead of requesting them. All 8 projects are `coming-soon`; the 4 public repos link to GitHub.
-- **LCP:** fixed in `fix(perf)`. The first poster was the LCP element (2.7s simulated slow 4G). Placeholders are now inline SVG, the hero text is the LCP element, and local Lighthouse mobile reports LCP 0.8s. Two e2e tests fail if the LCP element is an image or sits outside the hero.
-- **Phase 7 watch-out:** real posters load as lazy images with no priority. The first card's poster is inside the phone viewport today, so re-run Lighthouse when the first real poster lands (the ring will sit above the list by then).
-- **ui-auditor:** no critical or high findings; one medium (mobile layout shift, now 0) and five low, all fixed in `fix(list): address ui audit findings`.
-- **Phase 3 risk:** the page already ships about 141 KB gzipped of framework JS against the 150 KB "JS before 3D" budget (ui-auditor's measurement). The store, toggle and lazy loader must fit in about 9 KB, or the budget needs a logged decision.
+- **Checks:** typecheck and lint clean; 118 unit tests; 28 e2e tests (run three times in a row). Lighthouse mobile, local production build: 100 / 100 / 100 / 100, LCP 0.9s, CLS 0. Not run on the preview.
+- **Contrast:** `--ink-dim` on `--glass` is 6.61:1 (6.12:1 over the strongest glow). The spec's `--accent`, `--live` and `--warn` fail AA as small text, so text uses `--accent-ink`, `--live-ink` and `--warn-ink`. `lib/contrast.test.ts` computes every pair from `app/globals.css`.
+- **Changed from the approved plan after the ui audit:** the detail panel is modal in the list view at every width (it covered the right card column while focus could move underneath); it is non-modal only when `viewMode === "ring"` on desktop, so Phase 3 gets the behavior it needs by setting the view mode. The side-panel and full-nav layouts start at 1024px, not 768px. Card blur is off. `--glass-strong` is 0.9, not 0.82. All four are in docs/DECISIONS.md or docs/DESIGN.md.
+- **ui-auditor:** no critical; 2 high, 4 medium, 5 low — all fixed in `fix(a11y): address ui audit findings` except one judgement call left as is: the reference nav pill runs nearly the full viewport width, ours is capped to the 72rem content column.
+- **Resume:** `public/resume.pdf` exists, so "Download resume" and the nav's Resume link point at it (no LinkedIn fallback needed).
+- **Identity line** is now "AI engineer building agentic systems that ship." (from the reference). docs/AI_GUIDE.md still describes the role in its own words; no fact changed.
+- **JavaScript:** the page's scripts went from 176.3 KB to 180.2 KB gzipped (+3.9 KB: Zustand, the detail panel, the card trigger, the menu closer), measured by fetching every script the HTML references. That method reads higher than the ui-auditor's 141 KB from Phase 2, so compare deltas only. **Phase 3 risk stands:** about 5 KB is left of the 150 KB "JS before 3D" budget on the auditor's scale, or the budget needs a logged decision.
+- **"List view"** in the nav is a link to `#projects`. Phase 3 turns it into the ring/list toggle.
+- **Screenshots:** before/after at 1280 and 375 plus the open panel are in `docs/screenshots/phase-2.5/` (WebP, each under 200 KB).
+- **Draft copy:** every `bullets`, `tags` and `stack` value in `content/projects.ts` is a draft with no metrics; Phase 7 replaces them from each repo. The detail panel shows `skills` because `stack` is mostly empty. Sentinel Six team wording still needs the team's OK.
+- **Placeholders:** posters are inline SVG placeholders (`components/hud/Poster.tsx`); all 8 projects are `coming-soon`; the 4 public repos link to GitHub.
+- **Phase 7 watch-out:** real posters load as lazy images with no priority. Re-run Lighthouse when the first real poster lands; two e2e tests fail if the LCP element is an image or sits outside the hero.
 - **Local setup:** the pre-commit hook runs a gitleaks secret scan and fails if gitleaks is missing — `brew install gitleaks` on any new machine.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
+- Nav: underline the active section while scrolling · bottom sheet: drag the handle to dismiss · nav pill at full viewport width like the reference
