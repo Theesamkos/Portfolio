@@ -1,10 +1,11 @@
+import { Chip, type ChipTone } from "@/components/ui/Chip";
 import type { ProjectStatus, ProjectVisibility } from "@/lib/schema";
 
-/** Chip colors per docs/DESIGN.md: LIVE green, VIDEO accent, COMING SOON amber (text in the -ink shades). */
-const statusChips: Record<ProjectStatus, { label: string; className: string }> = {
-  live: { label: "Live", className: "border-live text-live-ink" },
-  video: { label: "Video", className: "border-accent text-accent-ink" },
-  "coming-soon": { label: "Coming soon", className: "border-warn text-warn-ink" },
+/** Status colors per docs/DESIGN.md: LIVE green, VIDEO accent, COMING SOON amber. */
+const statusChips: Record<ProjectStatus, { label: string; tone: ChipTone }> = {
+  live: { label: "Live", tone: "live" },
+  video: { label: "Video", tone: "video" },
+  "coming-soon": { label: "Coming soon", tone: "coming-soon" },
 };
 
 /** PRIVATE / TEAM get a quiet outline. Public is the default, so it gets no chip. */
@@ -14,16 +15,13 @@ const visibilityLabels: Record<ProjectVisibility, string | null> = {
   team: "Team",
 };
 
-const chip =
-  "inline-flex shrink-0 items-center border px-2 py-0.5 font-mono text-xs tracking-readout whitespace-nowrap uppercase";
-
 export function StatusChip({ status }: { status: ProjectStatus }) {
-  const { label, className } = statusChips[status];
+  const { label, tone } = statusChips[status];
   return (
-    <span className={`${chip} ${className}`}>
+    <Chip tone={tone}>
       <span className="sr-only">Status: </span>
       {label}
-    </span>
+    </Chip>
   );
 }
 
@@ -31,9 +29,9 @@ export function VisibilityChip({ visibility }: { visibility: ProjectVisibility }
   const label = visibilityLabels[visibility];
   if (!label) return null;
   return (
-    <span className={`${chip} border-ink-dim text-ink-dim`}>
+    <Chip tone="muted">
       <span className="sr-only">Source: </span>
       {label}
-    </span>
+    </Chip>
   );
 }

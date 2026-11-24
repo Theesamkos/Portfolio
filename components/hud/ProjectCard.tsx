@@ -1,34 +1,36 @@
+import { Chip } from "@/components/ui/Chip";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { MonoLabel } from "@/components/ui/MonoLabel";
 import type { Project } from "@/lib/schema";
 import { Poster } from "./Poster";
+import { ProjectLinks } from "./ProjectLinks";
 import { StatusChip, VisibilityChip } from "./StatusChip";
 
-const linkLabels = { demo: "Live demo", video: "Video", repo: "Code" } as const;
-const linkOrder = ["demo", "video", "repo"] as const;
+/** `01 / 08` — a project's place on the ring. */
+export function projectPosition(order: number, total: number): string {
+  return `${String(order).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+}
 
-/** One project in the list view. A Server Component: plain HTML, no client JS. */
+/** One project in the list view: a pane of glass. A Server Component — plain HTML. */
 export function ProjectCard({ project, total }: { project: Project; total: number }) {
   const headingId = `${project.id}-title`;
-  const links = linkOrder.flatMap((kind) => {
-    const href = project.links[kind];
-    return href ? [{ kind, href }] : [];
-  });
-  const position = `${String(project.order).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
 
   return (
-    <article
+    <GlassPanel
+      as="article"
       id={project.id}
       aria-labelledby={headingId}
-      className="glass rounded-panel relative flex h-full flex-col overflow-hidden"
+      className="relative flex h-full flex-col overflow-hidden"
     >
       <Poster project={project} total={total} />
 
-      <div className="flex flex-1 flex-col gap-4 p-5">
+      <div className="flex flex-1 flex-col gap-4 p-5 md:p-6">
         {/* Never wraps: a wrap here before the mono font loads would shift the card. */}
         <div className="flex items-center gap-2">
-          <span className="text-ink-dim tracking-readout mr-auto min-w-0 truncate font-mono text-xs uppercase">
+          <MonoLabel className="mr-auto min-w-0 truncate">
             <span className="sr-only">Project </span>
-            {position}
-          </span>
+            {projectPosition(project.order, total)}
+          </MonoLabel>
           <StatusChip status={project.status} />
           <VisibilityChip visibility={project.visibility} />
         </div>
@@ -37,7 +39,7 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
           <h3 id={headingId} className="text-xl font-bold">
             {project.title}
           </h3>
-          <p className="text-base">{project.pitch}</p>
+          <p className="text-ink-dim text-base">{project.pitch}</p>
         </div>
 
         <ul className="text-ink-dim marker:text-accent flex list-disc flex-col gap-1.5 pl-5 text-sm">
@@ -54,39 +56,14 @@ export function ProjectCard({ project, total }: { project: Project; total: numbe
 
         <ul role="list" aria-label={`${project.title} skills`} className="flex flex-wrap gap-2">
           {project.skills.map((skill) => (
-            <li
-              key={skill}
-              className="border-line text-ink tracking-readout border px-2 py-0.5 font-mono text-xs uppercase"
-            >
+            <Chip key={skill} as="li">
               {skill}
-            </li>
+            </Chip>
           ))}
         </ul>
 
-        {links.length > 0 ? (
-          <ul
-            role="list"
-            aria-label={`${project.title} links`}
-            className="mt-auto flex flex-wrap gap-3 pt-1"
-          >
-            {links.map(({ kind, href }) => (
-              <li key={kind}>
-                <a
-                  href={href}
-                  rel="noopener noreferrer"
-                  className="border-accent text-accent-ink hover:bg-accent hover:text-on-accent duration-hover inline-flex min-h-11 items-center border px-4 text-sm font-medium transition-colors"
-                >
-                  {linkLabels[kind]}
-                  <span className="sr-only">
-                    : {project.title}
-                    {kind === "repo" ? " on GitHub" : ""}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <ProjectLinks project={project} className="mt-auto pt-1" />
       </div>
-    </article>
+    </GlassPanel>
   );
 }

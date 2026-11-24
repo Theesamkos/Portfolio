@@ -1,3 +1,4 @@
+import { MonoLabel } from "@/components/ui/MonoLabel";
 import type { Project } from "@/lib/schema";
 import { ProjectCard } from "./ProjectCard";
 
@@ -6,12 +7,12 @@ export function ProjectList({ projects }: { projects: readonly Project[] }) {
   return (
     <section id="projects" aria-labelledby="projects-heading" className="flex flex-col gap-6">
       <div className="border-line flex items-baseline justify-between gap-4 border-b pb-3">
-        <h2 id="projects-heading" className="text-lg font-bold">
+        <h2 id="projects-heading" className="text-xl font-bold">
           Featured projects
         </h2>
-        <p className="text-ink-dim tracking-readout font-mono text-xs uppercase">
+        <MonoLabel as="p" tone="dim">
           {projects.length} projects
-        </p>
+        </MonoLabel>
       </div>
 
       {/* role="list": Safari drops list semantics when list-style is none (Tailwind's reset). */}
