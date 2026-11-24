@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // Don't advertise the framework version.
   poweredByHeader: false,
+  // `next dev` otherwise appends its own rules block to AGENTS.md on every start.
+  // AGENTS.md is written by hand in this repo.
+  agentRules: false,
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders({ isDev }) }];
   },
