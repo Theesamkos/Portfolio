@@ -22,6 +22,7 @@
     "ask": [
       "Bash(pnpm add:*)",
       "Bash(git push:*)",
+      "Bash(gh pr merge:*)",
       "Bash(vercel:*)",
       "Bash(rm:*)"
     ],
