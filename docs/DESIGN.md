@@ -100,7 +100,7 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 
 Below 1024px the ceiling is Medium. When WebGL reports a software renderer (SwiftShader, llvmpipe, a software rasterizer) the ring starts on Low and stays there. `?tier=high|medium|low` pins a tier for testing.
 
-While the scene loads, a small "Loading 3D view" line shows above the list; without WebGL, or if the scene fails, a note says the list is what there is. Both sit out of the flow, so the list never moves.
+The ring's slot is in the page from the first paint at the ring's full height, with the list below it. While the scene loads, the slot shows a small "Loading 3D view" line; when the scene is ready it appears in the slot and the list fades out underneath, so nothing on screen moves. Without WebGL, or if the scene fails, the slot collapses to a one-line note above the list. A visitor who was already reading the list when the scene arrived keeps the list, and the slot offers a "Show the 3D ring" button.
 
 ## Project art
 Each project needs a simple 3D-feeling icon in the reference's style (isometric glass layers, a lens, a network, a wave). Until real art exists, each project has a generated isometric icon, `public/projects/<id>/icon.svg`, in the accent blues (stacked layers, tile grid, network, lens, pose figure, bars, map pin and route, document and check). Phase 7 replaces them. Posters are `public/projects/<id>/poster.webp`, 1600×1000.
