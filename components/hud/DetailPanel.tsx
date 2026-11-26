@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { ArrowLeftIcon, ArrowRightIcon, CheckCheckIcon, CloseIcon } from "@/components/ui/icons";
@@ -186,9 +193,11 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
     if (target === "closed") focusProject(null);
     else setSnap(target);
   };
-  // The click that ends a drag is not a press; a press (or Enter / Space) toggles.
-  const onHandleClick = () => {
-    const dragged = drag.current?.moved ?? false;
+  // The click that ends a mouse drag is not a press; a press (or Enter / Space)
+  // toggles. A keyboard click has `detail` 0 and always counts: a touch drag ends
+  // with no click at all, which would otherwise leave `moved` set and swallow it.
+  const onHandleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const dragged = event.detail > 0 && (drag.current?.moved ?? false);
     drag.current = null;
     if (!dragged) setSnap((current) => (current === "half" ? "full" : "half"));
   };
@@ -226,7 +235,9 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
           <button
             type="button"
             aria-expanded={snap === "full"}
-            aria-label={snap === "full" ? "Collapse project details" : "Expand project details"}
+            // One name; `aria-expanded` carries the state. A name that also changed would
+            // be read as "Collapse…, expanded".
+            aria-label="Expand project details"
             onPointerDown={onHandleDown}
             onPointerMove={onHandleMove}
             onPointerUp={onHandleUp}

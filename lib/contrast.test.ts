@@ -65,6 +65,13 @@ describe("design token contrast (WCAG AA)", () => {
     expect(contrastRatio(hex(text), hex(fill))).toBeGreaterThanOrEqual(AA);
   });
 
+  // The ring's panes are --glass-tint under a gradient and over a moving 3D scene, so
+  // this is the floor, not the whole story: the rendered panes were measured in the
+  // Phase 4 ui audit, and the pitch uses --ink because --ink-dim fell short there.
+  test.each(["ink", "ink-dim"])("--%s on --glass-tint (the ring's panes)", (text) => {
+    expect(contrastRatio(hex(text), hex("glass-tint"))).toBeGreaterThanOrEqual(AA);
+  });
+
   test("the base accent and status colors are not safe as small text — use the -ink shades", () => {
     for (const base of ["accent", "live", "warn"]) {
       expect(contrastRatio(hex(base), surfaces["glass over the strongest glow"]!)).toBeLessThan(AA);

@@ -70,7 +70,7 @@ export function Platform({
         <circleGeometry args={[radius, 96]} />
         {reflective ? (
           <MeshReflectorMaterial
-            resolution={1024}
+            resolution={512}
             blur={[300, 110]}
             mixBlur={0.85}
             mixStrength={1.1}

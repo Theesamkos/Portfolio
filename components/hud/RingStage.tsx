@@ -23,7 +23,9 @@ const noteClass =
 function RingUnavailable() {
   return (
     <p role="status" data-ring-note="unavailable" className={noteClass}>
-      3D view isn&apos;t available here — showing the list
+      3D view isn&apos;t available here
+      {/* One line on a phone; the rest is still read out. */}
+      <span className="max-sm:sr-only">— showing the list</span>
     </p>
   );
 }

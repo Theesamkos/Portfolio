@@ -386,9 +386,9 @@ for (const viewport of [
         await expect(handle).toHaveAttribute("aria-expanded", "false");
         await handle.press("Enter");
         await expect.poll(height).toBeCloseTo(0.92, 1);
-        await expect(
-          dialog.getByRole("button", { name: "Collapse project details" }),
-        ).toHaveAttribute("aria-expanded", "true");
+        await expect(handle).toHaveAttribute("aria-expanded", "true");
+        // Its focus ring is drawn inside the sheet, where nothing clips it.
+        await expect(handle).toHaveCSS("outline-offset", "-4px");
 
         // Scrolled down, closed and opened again: back at the top and at half height.
         await dialog
@@ -428,7 +428,13 @@ for (const viewport of [
 
         await dragHandle("Expand project details", -260);
         await expect.poll(height).toBeCloseTo(0.92, 1);
-        await dragHandle("Collapse project details", 620);
+        // A press right after a drag still toggles (and back, for the next step).
+        const handle = dialog.getByRole("button", { name: "Expand project details" });
+        await handle.press("Enter");
+        await expect.poll(height).toBeCloseTo(0.55, 1);
+        await handle.press("Enter");
+        await expect.poll(height).toBeCloseTo(0.92, 1);
+        await dragHandle("Expand project details", 620);
         await expect(dialog).toBeHidden();
       });
     }
