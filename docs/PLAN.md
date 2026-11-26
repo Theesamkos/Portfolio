@@ -51,12 +51,12 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 
 ## Phase 4 — Polish pass on the look
 **Lesson:** the last 10% is where "nice" becomes "what?!".
-- [ ] Diff against the reference fixed in order of visual impact
-- [ ] Hover/press states; ring damping tuned; detail panel motion
-- [ ] Placeholder project icons in the reference style
-- [ ] Loading and no-WebGL fallback states
-- [ ] Start on the low tier when WebGL reports a software renderer
-- [ ] ui-auditor findings fixed; Lighthouse a11y ≥ 95
+- [ ] Diff against the reference fixed in order of visual impact — built: near-square frosted cyan-blue panes with icon, pitch and status dot; soft glowing front edge with a pool of light on the disc; halo as an orbit; opaque sphere half behind the front panel; panel reflections on the disc (high tier); disc in frame at rest and when selected. Judged by eye from `docs/screenshots/phase-4/`, no automated visual test. Open: Sam's side-by-side verdict and real phone check
+- [x] Hover/press states; ring damping tuned; detail panel motion — `pressable` utility at 150ms (e2e: button scales to 0.97 while pressed, card lifts 6px); ring on a critically damped spring (7 unit tests: 60/120Hz, no overshoot, exact rest); panel closes over 240ms (sampled: opacity 1 → 0 in about 250ms, content kept). The sheet has half and full snap points with a draggable handle (e2e)
+- [x] Placeholder project icons in the reference style — 8 isometric SVGs, each under 4 KB (unit test)
+- [x] Loading and no-WebGL fallback states — e2e: loading line while the chunk is delayed, note with WebGL disabled and when the chunk fails, nothing with `?view=list`
+- [x] Start on the low tier when WebGL reports a software renderer — e2e on SwiftShader draws `data-tier="low"`; `?tier=` still wins; 13 unit tests for the renderer names
+- [x] ui-auditor findings fixed; Lighthouse a11y ≥ 95 — audit: 0 high, 3 medium (all fixed, 2 with e2e assertions), 7 low (4 fixed, 3 under "Later"). Lighthouse accessibility 100 on ring and list, mobile and desktop, against the production build
 
 ## Phase 5 — AI guide
 **Lesson:** grounding beats RAG here; tools drive UI; evals test prompts.
@@ -84,19 +84,23 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-26 — Phase 4 started on `phase/4-polish`.** Phases 1, 2, 2.5 and 3 are merged.
-- **Phase 3 is closed:** Sam compared the ring with the two reference images and tried it on a real phone on 2026-11-26; both passed.
-- **Phase 4 plan:** panels first (near-square proportions, frosted blue-tinted fill, a soft glowing edge that spills onto the disc, then icon + pitch + status dot), then the halo and core, the platform reflection, the low tier for software renderers, the phone fixes (About hidden below 1024px, the sheet opens at the top with half and full snap points), hover and press states, ring damping, loading and no-WebGL states, and the ui-auditor pass.
-- **Decided:** the core-to-panel light trace is Phase 5 work (the guide drives it), so it is off the Phase 4 checklist. Starting on the low tier for software renderers moved from "Later" into Phase 4.
+**2026-11-26 — Phase 4 built on `phase/4-polish`, waiting on Sam's side-by-side verdict and phone check.** Phases 1, 2, 2.5 and 3 are merged.
+- **Sam — to close Phase 4:** compare `docs/screenshots/phase-4/after-*.webp` (or the preview) with the two reference images, then on a real phone: open a project (the sheet should open at the top, at half height), drag the handle up and down, check the three panes fit the screen, and that About is gone. Then tick the first Phase 4 box.
+- **Sam — the sheet opening scrolled down:** not reproduced in Chromium or WebKit phone emulation, including after scrolling, closing and reopening. A guard is in (scroll reset after the dialog opens, `preventScroll` on focus moves, always reopens at half height). Only a real phone can confirm it is gone.
 - **Sam — securityheaders.com (A or better):** still open from Phase 1.
-- **Baseline from Phase 3:** 145 unit tests; 43 e2e tests (15 for the ring); first-load scripts 187,122 bytes gzipped, with about 5 KB of the 150 KB budget left on the ui-auditor's scale; the lazy 3D chunk is 315 KB gzipped; 60 fps at every tier on an Apple M5 in headless Chrome (capped at 60, so no headroom figure). Not measured on a mid laptop or any phone. e2e runs WebGL in software, so it proves behavior, not speed.
-- **Known gaps against the reference at the start of Phase 4:** placeholder art on every panel, no pitch line or status dot on panels, washed-out side panels, a flat halo, the sphere sitting above the panels, no visible reflection on the disc, the left panel clipped at 375px. The ask bar is Phase 5.
-- **Not verified by anyone:** Safari, Firefox, a real screen reader.
-- **Content:** every project is `coming-soon`, posters are placeholders, and real posters must not become the LCP element. Check docs/AI_GUIDE.md's eval line "agents? → software-factory/acme-invoice-agent" still reads right in Phase 5.
-- **`?view=list`** keeps the ring from loading (the list e2e tests use it); **`?tier=high|medium|low`** pins the effects tier. The tier readout shows in `pnpm dev` only.
-- **Local setup:** `brew install gitleaks` on a new machine. `PORT=3100 pnpm e2e` if port 3000 is taken.
+- **Open, needs a decision — layout shift in ring view:** Lighthouse reports CLS 0.44 (mobile) and 0.51 (desktop) on `/`, performance 46 and 62; the list view (`?view=list`) scores 100 with CLS 0. The shifting element is the projects section, when the list is swapped for the ring after load. That swap is Phase 3 code this phase did not change, but it was not measured on `main`. Lighthouse ran in headless Chrome, which also draws the ring in software.
+- **Checks:** typecheck and lint clean; 172 unit tests; 50 e2e tests. e2e runs WebGL in software, so it proves behavior, not speed.
+- **JavaScript:** first-load scripts 187,122 → 188,131 bytes gzipped (+1.0 KB: the renderer probe, the two notes, the `pressable` classes), measured as the gzipped sum of the scripts in the home page's HTML — compare deltas only. About 4 KB of the 150 KB budget is left on the ui-auditor's scale. The lazy 3D chunk was not re-measured.
+- **Frame rate:** 60 fps idle and turning at high, medium and low, at 1440px and 375px, on an Apple M5 in headless Chrome with the GPU on, against the production build. Capped at 60, so no headroom figure. Not measured on a mid laptop or any phone.
+- **Not what the plan said:** the halo leans 6°, not 15° (the camera already looks down 9°, so it shows at about 15°); the sphere is opaque, not translucent glass; the panes have no pitch below 1024px; the first sheet snap is 55% of the screen, which on a small phone shows the title, pitch and the start of the bullets, not all three; chips have no hover state; the "before" screenshots come from the dev server (they show the dev-only tier readout). All in docs/DECISIONS.md or docs/DESIGN.md.
+- **Not verified by anyone:** Safari, Firefox, a real screen reader, a real GPU other than the M5.
+- **Content:** every project is `coming-soon`, posters and icons are placeholders, and real posters must not become the LCP element. Check docs/AI_GUIDE.md's eval line "agents? → software-factory/acme-invoice-agent" still reads right in Phase 5.
+- **`?view=list`** keeps the ring from loading; **`?tier=high|medium|low`** pins the effects tier. A software renderer starts and stays on low, so e2e pins `?tier=high` for the one full-pipeline test. The tier readout shows in `pnpm dev` only.
+- **Local setup:** `brew install gitleaks` on a new machine. `PORT=3100 pnpm e2e` if port 3000 is taken; stop any `next start` left on that port first, or Playwright reuses its old build. `pnpm exec playwright install webkit` if you want to run the phone emulation checks in WebKit.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
-- Nav: underline the active section while scrolling · bottom sheet: drag the handle to dismiss · nav pill at full viewport width like the reference
-- Ring: blur on the non-front panels (high tier) · pitch line and status dot on panels · trim the 315 KB 3D chunk · render on demand under reduced motion · Tab from the non-modal panel should reach the ring · "name resolves last" intro · core-to-panel light trace (Phase 5)
+- Nav: underline the active section while scrolling · nav pill at full viewport width like the reference
+- Ring: blur on the non-front panels (high tier) · trim the 315 KB 3D chunk · render on demand under reduced motion · Tab from the non-modal panel should reach the ring · "name resolves last" intro · core-to-panel light trace (Phase 5) · skip the label math on frames where the ring, camera and stage have not moved · side-pane titles are 10px at 375px and 8.5px at 320px · put the icons on the list cards
+- Loading: the swap from list to ring shifts the page (CLS 0.44–0.51 in Lighthouse) · the "3D view isn't available" note mounts already filled, so a screen reader may not announce it
+- Copy: a short tagline per project (about 40 characters) for the panes, in place of the 90-character pitch
