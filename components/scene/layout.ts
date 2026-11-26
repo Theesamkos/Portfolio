@@ -14,6 +14,8 @@ export type RingLayout = {
   platformRadius: number;
   platformY: number;
   coreScale: number;
+  /** How far below the panels' top edge the core's center sits. */
+  coreDrop: number;
   /** World width the camera must fit across the stage. */
   fitWidth: number;
   /**
@@ -45,6 +47,7 @@ export const FULL_LAYOUT: RingLayout = {
   platformRadius: 4.6,
   platformY: -1.2,
   coreScale: 1,
+  coreDrop: 0.3,
   fitWidth: 10.2,
   fitDepth: 0,
   minDistance: 9.8,
@@ -63,6 +66,7 @@ export const COMPACT_LAYOUT: RingLayout = {
   platformRadius: 3.1,
   platformY: -1.2,
   coreScale: 0.7,
+  coreDrop: -0.25,
   fitWidth: 4.9,
   fitDepth: 1.55,
   minDistance: 8,
@@ -75,7 +79,16 @@ export const COMPACT_LAYOUT: RingLayout = {
 /** How far the panels stand off the platform. */
 export const PANEL_CLEARANCE = 0.22;
 
-/** The panels' center height; the core's center sits level with their top edge. */
+/** The panels' center height. */
 export function panelCenterY(layout: RingLayout): number {
   return layout.platformY + PANEL_CLEARANCE + layout.panelHeight / 2;
+}
+
+/**
+ * The core's center height. It stands at the middle of the ring, behind the front
+ * panel, and the camera looks down on both — so to have the front panel cover the
+ * sphere's lower half, the sphere has to sit well below the panel's top edge.
+ */
+export function coreCenterY(layout: RingLayout): number {
+  return panelCenterY(layout) + layout.panelHeight / 2 - layout.coreDrop;
 }
