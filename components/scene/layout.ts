@@ -31,6 +31,12 @@ export type RingLayout = {
   /** How far the camera slides right when a project is selected (ring moves left). */
   activeShift: number;
   /**
+   * How much further back the camera sits while a project is selected. The detail
+   * panel covers the right of the stage; sliding alone would push the disc out of the
+   * left edge, so the camera also backs off until the whole disc fits beside the panel.
+   */
+  activeZoom: number;
+  /**
    * Width of a panel's DOM label in CSS pixels, close to the front pane's width on
    * screen — so the label is mapped onto the pane at about 1:1 and its type stays
    * the size it was set in.
@@ -44,16 +50,17 @@ export const FULL_LAYOUT: RingLayout = {
   panelWidth: 1.75,
   panelHeight: 1.85,
   panelRadius: 0.12,
-  platformRadius: 4.6,
+  platformRadius: 4.35,
   platformY: -1.2,
   coreScale: 1,
   coreDrop: 0.3,
   fitWidth: 10.2,
   fitDepth: 0,
-  minDistance: 9.8,
-  cameraHeight: 2.4,
-  lookAtY: -0.9,
-  activeShift: 1.7,
+  minDistance: 10.4,
+  cameraHeight: 2.1,
+  lookAtY: -1.08,
+  activeShift: 3.3,
+  activeZoom: 1.18,
   labelWidth: 250,
 };
 
@@ -73,6 +80,7 @@ export const COMPACT_LAYOUT: RingLayout = {
   cameraHeight: 1.6,
   lookAtY: 0.2,
   activeShift: 0,
+  activeZoom: 1,
   labelWidth: 150,
 };
 

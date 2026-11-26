@@ -70,12 +70,12 @@ export function Platform({
         <circleGeometry args={[radius, 96]} />
         {reflective ? (
           <MeshReflectorMaterial
-            resolution={512}
-            blur={[320, 96]}
-            mixBlur={1}
-            mixStrength={0.35}
-            mirror={0}
-            roughness={0.7}
+            resolution={1024}
+            blur={[300, 110]}
+            mixBlur={0.85}
+            mixStrength={1.1}
+            mirror={0.55}
+            roughness={0.6}
             color={tokens.bgGlow}
             transparent
             opacity={0.55}
@@ -112,13 +112,13 @@ export function Platform({
 
       {/* Rim. */}
       <mesh rotation-x={Math.PI / 2} renderOrder={-1}>
-        <torusGeometry args={[radius, 0.035, 12, 160]} />
-        <meshStandardMaterial color={tokens.white} roughness={0.15} transparent opacity={0.95} />
+        <torusGeometry args={[radius, 0.022, 12, 160]} />
+        <meshStandardMaterial color={tokens.white} roughness={0.15} transparent opacity={0.7} />
       </mesh>
       {/* Inner ring, where the panels stand. */}
       <mesh rotation-x={Math.PI / 2} position-y={0.005} renderOrder={-1}>
         <torusGeometry args={[layout.radius + 0.45, 0.012, 8, 160]} />
-        <meshStandardMaterial color={tokens.white} roughness={0.2} transparent opacity={0.7} />
+        <meshStandardMaterial color={tokens.white} roughness={0.2} transparent opacity={0.35} />
       </mesh>
     </group>
   );

@@ -10,8 +10,8 @@ import type { SceneTokens } from "./tokens";
 /**
  * Moves the camera, every frame, toward where it should be (docs/DESIGN.md: 800ms,
  * damped). The ring turns the front panel toward the camera, so "easing to the active
- * panel" means: when a project is selected, slide right, which puts the front panel
- * left of center and leaves room for the detail panel.
+ * panel" means: when a project is selected, slide right and back off a little, which
+ * puts the whole ring left of center, beside the detail panel.
  *
  * It also fits the ring to the stage: the narrower the stage, the further back the
  * camera sits. No React state changes here — refs and the camera only.
@@ -36,11 +36,12 @@ export function CameraRig({
 
     const selected = useUiStore.getState().activeProjectId !== null;
     const shift = selected ? layout.activeShift : 0;
+    const distance = selected ? fit * layout.activeZoom : fit;
     // A little parallax from the pointer; none under reduced motion.
     const sway = reducedMotion ? 0 : state.pointer.x * 0.18;
 
     const x = ease(camera.position.x, shift + sway, tokens.cameraRate, delta, reducedMotion);
-    const z = ease(camera.position.z, fit, tokens.cameraRate, delta, reducedMotion);
+    const z = ease(camera.position.z, distance, tokens.cameraRate, delta, reducedMotion);
     camera.position.set(x, layout.cameraHeight, z);
     camera.lookAt(x - sway * 0.6, layout.lookAtY, 0);
   });
