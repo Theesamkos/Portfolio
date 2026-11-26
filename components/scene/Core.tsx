@@ -1,10 +1,11 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Color, type Mesh, type ShaderMaterial } from "three";
 import { useUiStore, type Tier } from "@/store/ui";
-import { panelCenterY, type RingLayout } from "./layout";
+import { coreCenterY, type RingLayout } from "./layout";
+import { softGlow } from "./textures";
 import type { SceneTokens } from "./tokens";
 
 const haloVertex = /* glsl */ `
@@ -29,6 +30,16 @@ const haloFragment = /* glsl */ `
     #include <colorspace_fragment>
   }
 `;
+
+/**
+ * How far the halo leans toward the camera, and how far it rolls. The camera already
+ * looks down on the core by about 9°; leaning the halo another 6° shows it at about
+ * 15° — a thin ellipse that reads as an orbit. (Before, it leaned 9° the other way
+ * and was seen edge-on: a line across the sphere.) The roll keeps it from looking
+ * like a level plate.
+ */
+const HALO_LEAN = (6 * Math.PI) / 180;
+const HALO_ROLL = (-8 * Math.PI) / 180;
 
 /**
  * The core (docs/DESIGN.md): a glass sphere with a thin glowing halo, tilted
@@ -63,6 +74,9 @@ export function Core({
     [tokens, tier],
   );
 
+  const glow = useMemo(() => softGlow(tokens), [tokens]);
+  useEffect(() => () => glow.dispose(), [glow]);
+
   useFrame((state, delta) => {
     const activity = useUiStore.getState().coreActivity;
     const time = state.clock.elapsedTime;
@@ -80,59 +94,48 @@ export function Core({
   });
 
   return (
-    <group
-      position-y={panelCenterY(layout) + layout.panelHeight / 2 + 0.1}
-      scale={layout.coreScale}
-    >
+    <group position-y={coreCenterY(layout)} scale={layout.coreScale}>
+      {/* Light around the sphere. A sprite always faces the camera, and a gradient
+          falls off smoothly — a second, denser sphere inside read as a hard ball. */}
+      <sprite scale={3.4} renderOrder={-1}>
+        <spriteMaterial map={glow} transparent opacity={0.8} depthWrite={false} />
+      </sprite>
+
+      {/* Unlike the rest of the glass, the sphere is opaque. Translucent, it showed the
+          panel behind it as a pale rectangle, and sharp highlights from the two lights
+          sat on it like a pair of eyes. Opaque and a little rough, it reads as a solid
+          glossy ball; and because it writes depth, the far half of the halo is hidden
+          behind it — which is what makes the halo read as an orbit. */}
       <mesh ref={sphere}>
         <sphereGeometry args={[0.95, 48, 32]} />
-        {tier === "high" ? (
-          <meshPhysicalMaterial
-            color={tokens.bgGlow}
-            transparent
-            opacity={0.7}
-            roughness={0.03}
-            metalness={0.15}
-            clearcoat={1}
-            clearcoatRoughness={0.04}
-            envMapIntensity={1.6}
-            depthWrite={false}
-          />
-        ) : (
-          <meshStandardMaterial
-            color={tokens.bgGlow}
-            transparent
-            opacity={0.7}
-            roughness={0.06}
-            metalness={0.15}
-            envMapIntensity={1.4}
-            depthWrite={false}
-          />
-        )}
-      </mesh>
-      {/* A denser blue center, so the sphere reads as solid glass and not a bubble. */}
-      <mesh scale={0.62}>
-        <sphereGeometry args={[0.95, 24, 16]} />
-        <meshBasicMaterial color={tokens.glow} transparent opacity={0.45} depthWrite={false} />
+        <meshStandardMaterial
+          color={tokens.glow}
+          roughness={0.5}
+          metalness={0.1}
+          envMapIntensity={1.3}
+        />
       </mesh>
 
-      <group rotation={[Math.PI / 2 - 0.16, 0.1, 0]}>
-        {/* Soft blue falloff around the halo. Plain alpha blending: on a light page,
-            additive glow would only wash out to white. */}
-        <mesh>
-          <torusGeometry args={[1.42, 0.06, 12, 128]} />
-          <meshBasicMaterial color={tokens.glow} transparent opacity={0.22} depthWrite={false} />
-        </mesh>
-        <mesh>
-          <torusGeometry args={[1.42, 0.016, 12, 160]} />
-          <shaderMaterial
-            ref={halo}
-            uniforms={uniforms}
-            vertexShader={haloVertex}
-            fragmentShader={haloFragment}
-            toneMapped={false}
-          />
-        </mesh>
+      {/* The torus is built upright; a quarter turn lays it flat, then it leans. */}
+      <group rotation={[Math.PI / 2 + HALO_LEAN, 0, 0]}>
+        <group rotation-y={HALO_ROLL}>
+          {/* Soft blue falloff around the halo. Plain alpha blending: on a light page,
+              additive glow would only wash out to white. */}
+          <mesh>
+            <torusGeometry args={[1.38, 0.05, 12, 128]} />
+            <meshBasicMaterial color={tokens.glow} transparent opacity={0.45} depthWrite={false} />
+          </mesh>
+          <mesh>
+            <torusGeometry args={[1.38, 0.016, 12, 160]} />
+            <shaderMaterial
+              ref={halo}
+              uniforms={uniforms}
+              vertexShader={haloVertex}
+              fragmentShader={haloFragment}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
       </group>
     </group>
   );

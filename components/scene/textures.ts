@@ -79,3 +79,15 @@ export function lightPool(tokens: SceneTokens): CanvasTexture {
     context.fillRect(0, 0, 128, 128);
   });
 }
+
+/** A round, soft blue glow with no bright center: the light around the core. */
+export function softGlow(tokens: SceneTokens): CanvasTexture {
+  return draw(128, 128, (context) => {
+    const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, withAlpha(tokens.glow, 0.55));
+    gradient.addColorStop(0.5, withAlpha(tokens.glow, 0.22));
+    gradient.addColorStop(1, withAlpha(tokens.glow, 0));
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 128, 128);
+  });
+}
