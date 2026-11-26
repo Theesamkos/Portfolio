@@ -2,6 +2,21 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-26 · The core sphere is opaque; the panes stay translucent
+- **Context:** the sphere was translucent glass like the panels. In practice the panel behind it showed through as a pale rectangle, and the two directional lights left small sharp highlights on it. The output pass scales colors far above screen white down to keep their hue, so those highlights came out as dark dots. Rectangle plus two dots read as a face.
+- **Decision:** the sphere is an opaque, slightly rough `MeshStandardMaterial` in `--glow`, with a soft gradient sprite behind it for the glow. It writes depth, unlike the rest of the glass.
+- **Consequence:** the far half of the halo is hidden behind the sphere, which is what makes the halo read as an orbit. The sphere no longer shows what is behind it. A sharp highlight on any material brighter than about 1.5 will come out dark for the same reason; keep new glossy materials rough enough to stay under it.
+
+## 2026-11-26 · Soft light is a gradient texture, not bloom
+- **Context:** the reference's front panel has a soft glow around its edge and a pool of light on the disc. Bloom only spreads what is already brighter than its threshold, drawing the edge far over the threshold gave a hard saturated stroke, and the low tier has no bloom at all.
+- **Decision:** the pane tint, the glow around the front panel, its pool on the disc and the core's glow are small gradients drawn once on a 2D canvas (`components/scene/textures.ts`). The front edge is drawn only just above bloom's threshold.
+- **Consequence:** the same look on every tier, at no per-frame cost. The low tier has no post-processing pass and blends translucent layers heavier, so the pane tint is thinned there (`LOW_TIER_TINT`).
+
+## 2026-11-26 · A `--glass-tint` token for the ring's panes
+- **Context:** the panes were tinted with `--bg-glow-2`, a periwinkle that read violet on glass; the reference is a cyan-leaning blue.
+- **Decision:** one new color token, `--glass-tint` (`#cdeaff`), used only by the 3D panes and their tint gradient.
+- **Consequence:** not a text or UI color; it has no Tailwind utility and no contrast rule.
+
 ## 2026-11-24 · The ring takes over the page only when it is ready and the visitor is not using the list
 - **Context:** the first build switched to ring view the moment the lazy chunk mounted. The ui audit showed two failures: on a slow connection the list vanished under a visitor already reading card 5 (scroll position and focus lost, CLS 0.81), and a chunk that failed to load reached Next's root error screen and replaced the whole page.
 - **Decision:** the scene mounts invisibly and out of the flow, and switches to ring view only when its WebGL context exists — and only if the visitor has not scrolled past half a screen, has no panel open and has no focus in the list. Otherwise the nav offers "Ring view". The dynamic import resolves to nothing on failure, an error boundary in `RingStage` catches anything the scene throws, and a lost WebGL context switches back to the list until it is restored.
