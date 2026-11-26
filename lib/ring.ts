@@ -104,3 +104,54 @@ export function indexAfterAction(action: RingAction, index: number, count: numbe
 export function dampingFor(seconds: number): number {
   return Math.log(100) / seconds;
 }
+
+/**
+ * A value that moves like something with weight: it carries a velocity, so it eases
+ * in as well as out, keeps its momentum when its target changes (or a drag lets go),
+ * and settles without overshooting. `damp` above has no velocity — it starts at full
+ * speed the instant the target moves, which reads as weightless.
+ */
+export type Spring = { value: number; velocity: number };
+
+/** `smoothTime` for a move that is ~99% done after `seconds`. */
+export function smoothTimeFor(seconds: number): number {
+  // A critically damped spring is at 1% of the way left when ωt ≈ 6.64, and ω = 2 / smoothTime.
+  return (2 * seconds) / 6.64;
+}
+
+/** Below this distance and speed the spring is at rest and lands exactly on its target. */
+const REST = 1e-4;
+
+/**
+ * Advances `spring` toward `target` by `delta` seconds — a critically damped spring
+ * (the "SmoothDamp" from Game Programming Gems 4). Frame-rate independent: the same
+ * path at 60Hz and 120Hz. Mutates `spring`, so the render loop allocates nothing.
+ */
+export function smoothDamp(
+  spring: Spring,
+  target: number,
+  smoothTime: number,
+  delta: number,
+): void {
+  if (delta <= 0) return;
+  const omega = 2 / Math.max(1e-4, smoothTime);
+  const x = omega * delta;
+  // A polynomial stand-in for e^-x that stays stable when a frame is long.
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const from = spring.value;
+  const change = from - target;
+  const temp = (spring.velocity + omega * change) * delta;
+  let velocity = (spring.velocity - omega * temp) * decay;
+  let value = target + (change + temp) * decay;
+  // Never pass the target: arriving with speed left over stops there.
+  if (target - from > 0 === value > target) {
+    value = target;
+    velocity = 0;
+  }
+  if (Math.abs(value - target) < REST && Math.abs(velocity) < REST) {
+    value = target;
+    velocity = 0;
+  }
+  spring.value = value;
+  spring.velocity = velocity;
+}

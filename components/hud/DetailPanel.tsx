@@ -29,6 +29,10 @@ const DESKTOP = "(min-width: 1024px)";
  *   has to stay draggable.
  * Either way focus returns to the element that opened it on close.
  *
+ * Opening and closing take the same 240ms (docs/DESIGN.md): `@starting-style` gives
+ * the entry a state to animate from, and `transition-behavior: allow-discrete` on
+ * `display` and `overlay` keeps the dialog rendered until its exit has played.
+ *
  * As a sheet it has two heights (lib/sheet.ts): it opens at half, and the handle at
  * the top takes it to full — by dragging it, or by pressing it like any button.
  * Dragging down from half closes it.
@@ -58,6 +62,11 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
   const index = projects.findIndex((project) => project.id === activeProjectId);
   const project = index === -1 ? null : projects[index];
   const isOpen = project !== null;
+  // While the panel animates shut there is no active project, but it must not go
+  // blank mid-fade: keep showing the last one.
+  const [lastProject, setLastProject] = useState(project);
+  if (project && project !== lastProject) setLastProject(project);
+  const shown = project ?? lastProject;
 
   // A sheet always opens at half height, whatever it was left at. Resetting state when
   // a value changes is done during render, not in an effect: React re-renders at once
@@ -124,6 +133,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
   }, [isOpen, focusProject]);
 
   const step = (offset: number) => {
+    if (index === -1) return;
     const next = projects[(index + offset + projects.length) % projects.length];
     if (next) focusProject(next.id);
   };
@@ -206,9 +216,9 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
         // Keyboard-activated clicks report 0,0; they are never backdrop clicks.
         if (!inside && event.detail > 0) focusProject(null);
       }}
-      className="detail-panel glass-strong glass-blur text-ink rounded-t-sheet duration-panel backdrop:bg-ink/30 lg:rounded-sheet lg:backdrop:bg-ink/10 fixed inset-x-0 top-auto bottom-0 z-40 m-0 w-full max-w-none flex-col overflow-hidden rounded-b-none p-0 transition-[opacity,translate,height] ease-out open:flex max-lg:h-(--sheet-height) lg:inset-x-auto lg:top-24 lg:bottom-auto lg:h-[min(46rem,calc(100dvh-7rem))] lg:max-h-none lg:w-120 starting:translate-y-4 starting:opacity-0"
+      className="detail-panel glass-strong glass-blur text-ink rounded-t-sheet duration-panel backdrop:bg-ink/30 lg:rounded-sheet lg:backdrop:bg-ink/10 fixed inset-x-0 top-auto bottom-0 z-40 m-0 w-full max-w-none flex-col overflow-hidden rounded-b-none p-0 translate-y-4 opacity-0 transition-[opacity,translate,height,display,overlay] transition-discrete ease-out open:flex open:translate-y-0 open:opacity-100 max-lg:h-(--sheet-height) lg:inset-x-auto lg:top-24 lg:bottom-auto lg:h-[min(46rem,calc(100dvh-7rem))] lg:max-h-none lg:w-120 starting:open:translate-y-4 starting:open:opacity-0"
     >
-      {project ? (
+      {shown ? (
         <>
           {/* The sheet's handle. A real button: drag it, or press it to switch between
               half and full height. `touch-none` keeps the browser from scrolling the
@@ -232,7 +242,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
             className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain p-6 pt-2 lg:p-8 lg:pt-6"
           >
             <div className="flex items-center justify-between gap-4">
-              <MonoLabel>Project {projectPosition(project.order, projects.length)}</MonoLabel>
+              <MonoLabel>Project {projectPosition(shown.order, projects.length)}</MonoLabel>
               <button
                 type="button"
                 aria-label="Close project details"
@@ -246,9 +256,9 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
 
             <div className="flex flex-col gap-2">
               <h2 id="detail-panel-title" className="text-xl font-extrabold lg:text-2xl">
-                {project.title}
+                {shown.title}
               </h2>
-              <p className="text-ink-dim text-lg">{project.pitch}</p>
+              <p className="text-ink-dim text-lg">{shown.pitch}</p>
             </div>
 
             <section aria-labelledby="detail-panel-impact" className="border-line border-t pt-5">
@@ -256,7 +266,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
                 Impact
               </h3>
               <ul role="list" className="mt-3 flex flex-col gap-2">
-                {project.bullets.map((bullet) => (
+                {shown.bullets.map((bullet) => (
                   <li key={bullet} className="flex gap-3 text-base">
                     <CheckCheckIcon className="text-accent mt-0.5 size-5" />
                     <span>{bullet}</span>
@@ -270,7 +280,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
                 Skills
               </h3>
               <ul role="list" className="mt-3 flex flex-wrap gap-2">
-                {project.skills.map((skill) => (
+                {shown.skills.map((skill) => (
                   <Chip key={skill} as="li">
                     {skill}
                   </Chip>
@@ -279,17 +289,17 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
             </section>
 
             <div className="flex flex-wrap items-center gap-2">
-              <StatusChip status={project.status} />
-              <VisibilityChip visibility={project.visibility} />
+              <StatusChip status={shown.status} />
+              <VisibilityChip visibility={shown.visibility} />
             </div>
 
-            {project.team ? (
+            {shown.team ? (
               <p className="text-ink-dim text-sm">
-                Team project with the {project.team.name}. Sam&apos;s role: {project.team.role}.
+                Team project with the {shown.team.name}. Sam&apos;s role: {shown.team.role}.
               </p>
             ) : null}
 
-            <ProjectLinks project={project} primaryDemo />
+            <ProjectLinks project={shown} primaryDemo />
           </div>
 
           {/* Pinned, so Previous / Next stay under the pointer from project to project. */}

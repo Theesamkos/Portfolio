@@ -9,6 +9,8 @@ import {
   nearestIndex,
   panelAngle,
   rotationFor,
+  smoothDamp,
+  smoothTimeFor,
   wrapAngle,
   wrapIndex,
 } from "./ring";
@@ -105,4 +107,49 @@ describe("keyboard", () => {
 test("dampingFor: a move is about 99% done after the given time", () => {
   const lambda = dampingFor(0.6);
   expect(Math.exp(-lambda * 0.6)).toBeCloseTo(0.01);
+});
+
+describe("smoothDamp", () => {
+  const run = (hz: number, seconds: number, start = { value: 0, velocity: 0 }, target = 1) => {
+    const spring = { ...start };
+    const path: number[] = [];
+    for (let frame = 0; frame < Math.round(hz * seconds); frame += 1) {
+      smoothDamp(spring, target, smoothTimeFor(0.6), 1 / hz);
+      path.push(spring.value);
+    }
+    return { spring, path };
+  };
+
+  test("is about 99% of the way after the given time", () => {
+    const { spring } = run(60, 0.6);
+    expect(spring.value).toBeGreaterThan(0.98);
+    expect(spring.value).toBeLessThanOrEqual(1);
+  });
+
+  test("follows the same path at 60Hz and 120Hz", () => {
+    expect(run(60, 0.3).spring.value).toBeCloseTo(run(120, 0.3).spring.value, 2);
+  });
+
+  test("eases in: the first frame moves less than the frames after it", () => {
+    const { path } = run(60, 0.2);
+    expect(path[0]!).toBeLessThan(path[1]! - path[0]!);
+  });
+
+  test("never overshoots, even arriving with speed left over", () => {
+    const { path } = run(60, 1, { value: 0.9, velocity: 20 });
+    expect(Math.max(...path)).toBeLessThanOrEqual(1);
+  });
+
+  test("comes to rest exactly on the target", () => {
+    const { spring } = run(60, 2);
+    expect(spring.value).toBe(1);
+    expect(spring.velocity).toBe(0);
+  });
+
+  test("keeps its momentum when the target changes mid-move", () => {
+    const { spring } = run(60, 0.1);
+    const before = spring.velocity;
+    smoothDamp(spring, 2, smoothTimeFor(0.6), 1 / 60);
+    expect(spring.velocity).toBeGreaterThan(before * 0.9);
+  });
 });
