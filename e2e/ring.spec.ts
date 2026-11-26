@@ -137,6 +137,30 @@ test("at 375px the ring is a carousel: it mounts, steps, and does not scroll sid
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 });
 
+test("at 375px the three panels in view, and their text, fit inside the screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openRing(page);
+
+  // Each label is laid exactly over its pane, so the label's box is the pane's box.
+  const shown = async () =>
+    page.locator("[data-ring-labels] > div").evaluateAll((labels) =>
+      labels
+        .filter((label) => Number(getComputedStyle(label).opacity) > 0.9)
+        .map((label) => {
+          const box = label.getBoundingClientRect();
+          return { left: Math.round(box.left), right: Math.round(box.right) };
+        }),
+    );
+  await expect.poll(async () => (await shown()).length).toBe(3);
+  for (const box of await shown()) {
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(375);
+  }
+});
+
 test("with reduced motion the ring still works", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openRing(page);

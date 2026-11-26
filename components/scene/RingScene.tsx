@@ -285,7 +285,11 @@ export default function RingScene({ projects }: { projects: readonly RingProject
         {/* The panels' text: real DOM, laid over the canvas and moved by the render
             loop (ProjectPanel). Hidden from assistive tech — the live region and the
             controls below say the same thing in order. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          aria-hidden="true"
+          data-ring-labels
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+        >
           {projects.map((project, index) => (
             <div
               key={project.id}

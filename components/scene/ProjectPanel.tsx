@@ -12,6 +12,7 @@ import {
   type Material,
   type MeshBasicMaterial,
   type Object3D,
+  type Texture,
   Vector3,
 } from "three";
 import type { ProjectId } from "@/content/projects";
@@ -27,12 +28,19 @@ const INTRO_STAGGER = 0.06;
 const INTRO_DURATION = 0.45;
 const INTRO_RISE = 0.24;
 
-const GLASS_OPACITY = 0.7;
+/** The pane itself. Below 1 so the core and the disc show through: frosted, not solid. */
+const GLASS_OPACITY = 0.66;
 const FRONT_SCALE = 1.12;
-const OTHER_OPACITY = 0.75;
+/** Side panels stay readable; the front one is brightest because it alone is at 1. */
+const OTHER_OPACITY = 0.9;
 const HOVER_LIFT = 0.06;
-/** Drawn brighter than bloom's threshold (Effects.tsx) so the front edge glows. */
-const EDGE_BOOST = 12;
+/**
+ * The front edge is drawn brighter than bloom's threshold (Effects.tsx) so it glows —
+ * but only just: far over the threshold the line turns into a hard saturated stroke.
+ */
+const EDGE_BOOST = 5;
+/** The glow texture is this much larger than the pane it sits behind. */
+export const AURA_SCALE = 1.5;
 /**
  * How far panels turn with the ring. 0 would keep every panel flat to the camera,
  * 1 would point each straight out from the center; in between, the side panels
@@ -61,9 +69,15 @@ function toScreen(
 
 export type PanelGeometry = {
   glass: BufferGeometry;
+  /** The pane's face, with 0–1 texture coordinates for the tint. */
+  tint: BufferGeometry;
   edge: BufferGeometry;
+  aura: BufferGeometry;
   poster: BufferGeometry;
 };
+
+/** Drawn once and shared by every panel (textures.ts). */
+export type PanelTextures = { tint: Texture; aura: Texture };
 
 /**
  * One project on the ring: a rounded pane of glass, the project's art and an outline
@@ -83,6 +97,7 @@ export function ProjectPanel({
   tokens,
   tier,
   geometry,
+  textures,
   introRef,
   reducedMotion,
 }: {
@@ -94,6 +109,7 @@ export function ProjectPanel({
   tokens: SceneTokens;
   tier: Tier;
   geometry: PanelGeometry;
+  textures: PanelTextures;
   introRef: IntroClock;
   reducedMotion: boolean;
 }) {
@@ -101,18 +117,22 @@ export function ProjectPanel({
   const body = useRef<Group>(null);
   const frame = useRef<MeshBasicMaterial>(null);
   const glass = useRef<Material>(null);
+  const tint = useRef<MeshBasicMaterial>(null);
   const edge = useRef<MeshBasicMaterial>(null);
+  const aura = useRef<MeshBasicMaterial>(null);
   const art = useRef<MeshBasicMaterial>(null);
   const hovered = useRef(false);
   /** The element the hover cursor was set on, so it can be reset on unmount. */
   const cursorTarget = useRef<HTMLElement | null>(null);
 
   const angle = panelAngle(index, count);
-  // Brighter than bloom's threshold only where there is bloom; on the low tier an
-  // over-bright color would just clip toward white.
+  // The light glow blue, lifted over bloom's threshold where there is bloom. The low
+  // tier has none, and an over-bright color there would only clip toward white — it
+  // gets the plain accent, which still reads as a line on a light pane.
   const edgeColor = useMemo(
-    () => new Color(tokens.accent).multiplyScalar(tier === "low" ? 1 : EDGE_BOOST),
-    [tokens.accent, tier],
+    () =>
+      tier === "low" ? new Color(tokens.accent) : new Color(tokens.glow).multiplyScalar(EDGE_BOOST),
+    [tokens.accent, tokens.glow, tier],
   );
   const poster = useMemo(() => {
     const svg = posterSvg(order, count, { accent: tokens.accent, glow: tokens.glow });
@@ -180,12 +200,22 @@ export function ProjectPanel({
         reducedMotion || appear < 1,
       );
     }
-    if (frame.current) frame.current.opacity = 0.85 * dim * visible;
+    if (tint.current) tint.current.opacity = dim * visible;
+    if (frame.current) frame.current.opacity = 0.9 * dim * visible;
+    const glow = (isFront ? 1 : hovered.current ? 0.45 : 0) * visible;
     if (edge.current) {
-      const glow = isFront ? 1 : hovered.current ? 0.45 : 0;
       edge.current.opacity = ease(
         edge.current.opacity,
-        glow * visible,
+        glow,
+        tokens.hoverRate,
+        delta,
+        reducedMotion,
+      );
+    }
+    if (aura.current) {
+      aura.current.opacity = ease(
+        aura.current.opacity,
+        glow,
         tokens.hoverRate,
         delta,
         reducedMotion,
@@ -240,6 +270,18 @@ export function ProjectPanel({
       position={[Math.sin(angle) * layout.radius, 0, Math.cos(angle) * layout.radius]}
     >
       <group ref={body}>
+        {/* The soft glow around the front panel (and faintly on hover). Behind the
+            pane, so only the falloff outside its edge shows. */}
+        <mesh geometry={geometry.aura} position-z={-0.01} raycast={() => null}>
+          <meshBasicMaterial
+            ref={aura}
+            map={textures.aura}
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
+        </mesh>
+
         <mesh
           geometry={geometry.glass}
           onClick={onClick}
@@ -262,25 +304,36 @@ export function ProjectPanel({
           {tier === "high" ? (
             <meshPhysicalMaterial
               ref={glass}
-              color={tokens.white}
+              color={tokens.accentSoft}
               transparent
               opacity={0}
               roughness={0.18}
               clearcoat={1}
               clearcoatRoughness={0.1}
-              envMapIntensity={1.1}
+              envMapIntensity={0.8}
               depthWrite={false}
             />
           ) : (
             <meshStandardMaterial
               ref={glass}
-              color={tokens.white}
+              color={tokens.accentSoft}
               transparent
               opacity={0}
               roughness={0.25}
               depthWrite={false}
             />
           )}
+        </mesh>
+
+        {/* Frosting: clear at the top, bluer toward the bottom. */}
+        <mesh geometry={geometry.tint} position-z={0.0205} raycast={() => null}>
+          <meshBasicMaterial
+            ref={tint}
+            map={textures.tint}
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
         </mesh>
 
         {/* The pane's bright rim, on every panel. */}

@@ -16,6 +16,12 @@ export type RingLayout = {
   coreScale: number;
   /** World width the camera must fit across the stage. */
   fitWidth: number;
+  /**
+   * How far in front of the ring's center that width sits. The full ring is widest at
+   * the disc (0); the carousel is widest at its side panels, which stand closer to
+   * the camera — measured at the center they would be cut off by the screen edge.
+   */
+  fitDepth: number;
   /** The camera never comes closer than this, however wide the stage is. */
   minDistance: number;
   cameraHeight: number;
@@ -32,32 +38,34 @@ export type RingLayout = {
 
 export const FULL_LAYOUT: RingLayout = {
   compact: false,
-  radius: 3.1,
-  panelWidth: 1.45,
+  radius: 3.3,
+  panelWidth: 1.75,
   panelHeight: 1.85,
   panelRadius: 0.12,
-  platformRadius: 4.4,
+  platformRadius: 4.6,
   platformY: -1.2,
   coreScale: 1,
-  fitWidth: 9.8,
-  minDistance: 10,
+  fitWidth: 10.2,
+  fitDepth: 0,
+  minDistance: 9.8,
   cameraHeight: 2.4,
-  lookAtY: -0.75,
+  lookAtY: -0.9,
   activeShift: 1.7,
-  labelWidth: 210,
+  labelWidth: 250,
 };
 
 export const COMPACT_LAYOUT: RingLayout = {
   compact: true,
-  radius: 2.5,
-  panelWidth: 1.45,
+  radius: 2.2,
+  panelWidth: 1.6,
   panelHeight: 1.85,
   panelRadius: 0.12,
   platformRadius: 3.1,
   platformY: -1.2,
   coreScale: 0.7,
   fitWidth: 4.9,
-  minDistance: 8.5,
+  fitDepth: 1.55,
+  minDistance: 8,
   cameraHeight: 1.6,
   lookAtY: 0.2,
   activeShift: 0,
