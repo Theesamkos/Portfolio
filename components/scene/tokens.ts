@@ -10,6 +10,8 @@ export type SceneTokens = {
   accentSoft: string;
   glow: string;
   bgGlow: string;
+  /** The cyan-blue of the panes' frosting. */
+  glassTint: string;
   white: string;
   /** Damping rates for `ease`, from the motion tokens (docs/DESIGN.md "Motion"). */
   ringRate: number;
@@ -33,6 +35,7 @@ export function readSceneTokens(): SceneTokens {
     accentSoft: token("--accent-soft"),
     glow: token("--glow"),
     bgGlow: token("--bg-glow-2"),
+    glassTint: token("--glass-tint"),
     white: token("--on-accent"),
     ringRate: rate(token("--motion-ring")),
     cameraRate: rate(token("--motion-camera")),

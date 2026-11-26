@@ -21,6 +21,8 @@
   --accent-hover: #1557d6;
   --accent-soft: #e6efff;
   --glow: #7fb2ff;
+  /* The ring's panes: a cyan-leaning blue, so frosted glass does not read violet. */
+  --glass-tint: #cdeaff;
   --live: #16a34a;
   --warn: #f59e0b;
   --on-accent: #ffffff;
