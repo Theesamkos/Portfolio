@@ -59,7 +59,17 @@ function introSeen(): boolean {
  * server-rendered list stays in the DOM, hidden by CSS (`html[data-view="ring"]`),
  * and comes back with "List view", on an error, or if the WebGL context is lost.
  */
-export default function RingScene({ projects }: { projects: readonly RingProject[] }) {
+export default function RingScene({
+  projects,
+  software = false,
+}: {
+  projects: readonly RingProject[];
+  /**
+   * True when WebGL is drawn on the CPU (no usable GPU). The ring then starts on the
+   * low tier and stays there: measuring first would mean showing the slow path first.
+   */
+  software?: boolean;
+}) {
   const viewMode = useUiStore((state) => state.viewMode);
   const frontProjectId = useUiStore((state) => state.frontProjectId);
   const panelOpen = useUiStore((state) => state.activeProjectId !== null);
@@ -132,12 +142,14 @@ export default function RingScene({ projects }: { projects: readonly RingProject
     store.setViewMode("ring");
   };
 
-  // Small screens start one tier down, with the reflective floor off (docs/DESIGN.md).
-  // Set once: after that the tier belongs to the frame-rate monitor.
+  // Small screens start one tier down, with the reflective floor off (docs/DESIGN.md);
+  // a software renderer starts at the bottom. Set once: after that the tier belongs
+  // to the frame-rate monitor.
   useEffect(() => {
     const isDesktop = window.matchMedia(DESKTOP).matches;
-    useUiStore.getState().setTier(setup.pinnedTier ?? (isDesktop ? "high" : "medium"));
-  }, [setup.pinnedTier]);
+    const start = software ? "low" : isDesktop ? "high" : "medium";
+    useUiStore.getState().setTier(setup.pinnedTier ?? start);
+  }, [setup.pinnedTier, software]);
   // Crossing below 1024px (a rotated tablet) only lowers the ceiling; it never resets
   // a tier the monitor already stepped down.
   useEffect(() => {
@@ -275,7 +287,7 @@ export default function RingScene({ projects }: { projects: readonly RingProject
           // Also paused under the phone's bottom sheet, which covers the stage and
           // would otherwise re-blur a moving canvas every frame.
           running={(showing || !created) && onScreen && pageVisible && !(panelOpen && !desktop)}
-          ceiling={desktop ? "high" : "medium"}
+          ceiling={software ? "low" : desktop ? "high" : "medium"}
           pinned={setup.pinnedTier !== null}
           onReady={onReady}
           onContextLost={onContextLost}

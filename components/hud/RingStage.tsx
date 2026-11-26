@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { Component, useEffect, useState, type ReactNode } from "react";
 import type { RingProject } from "@/components/scene/Ring";
+import { isSoftwareRenderer, type WebGLSupport } from "@/lib/webgl";
 
 /**
  * `next/dynamic` with `ssr: false` splits the 3D scene (three.js, R3F, drei) into its
@@ -33,15 +34,24 @@ class RingBoundary extends Component<{ children: ReactNode }, { failed: boolean 
   }
 }
 
-function hasWebGL(): boolean {
+/**
+ * Asks the browser for a WebGL context and what draws it. Browsers that mask the
+ * renderer name expose the real one through the `WEBGL_debug_renderer_info`
+ * extension; Firefox has retired that extension and returns it from `RENDERER`.
+ */
+function probeWebGL(): WebGLSupport {
   try {
     const context = document.createElement("canvas").getContext("webgl2");
-    if (!context) return false;
+    if (!context) return "none";
+    const info = context.getExtension("WEBGL_debug_renderer_info");
+    const renderer: unknown = context.getParameter(
+      info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER,
+    );
     // Give the test context back; browsers cap how many a page may hold.
     context.getExtension("WEBGL_lose_context")?.loseContext();
-    return true;
+    return typeof renderer === "string" && isSoftwareRenderer(renderer) ? "software" : "gpu";
   } catch {
-    return false;
+    return "none";
   }
 }
 
@@ -54,13 +64,11 @@ function hasWebGL(): boolean {
  * JS before 3D < 150 KB).
  */
 export function RingStage({ projects }: { projects: readonly RingProject[] }) {
-  const [load, setLoad] = useState(false);
+  const [support, setSupport] = useState<WebGLSupport | null>(null);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("view") === "list") return;
-    const start = () => {
-      if (hasWebGL()) setLoad(true);
-    };
+    const start = () => setSupport(probeWebGL());
     // Wait until the browser is idle so the hero paints and becomes interactive first.
     // Safari has no requestIdleCallback; a short timeout does the same job.
     if (typeof window.requestIdleCallback === "function") {
@@ -71,9 +79,9 @@ export function RingStage({ projects }: { projects: readonly RingProject[] }) {
     return () => window.clearTimeout(handle);
   }, []);
 
-  return load ? (
+  return support === "gpu" || support === "software" ? (
     <RingBoundary>
-      <RingScene projects={projects} />
+      <RingScene projects={projects} software={support === "software"} />
     </RingBoundary>
   ) : null;
 }
