@@ -47,14 +47,15 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 - [x] Camera rig + pointer/wheel/swipe/keyboard controls + prev/next — e2e: arrows, Enter, drag, buttons; touch swipe checked by the ui-auditor in an emulated phone, not on a real one; wheel is horizontal only
 - [x] Performance tiers; mobile carousel layout — tiers follow drei `PerformanceMonitor`; `?tier=` pins one; carousel below 1024px, e2e at 375px
 - [x] Intro, reduced motion, live-region announcements, list/ring toggle — intro is the panels' staggered rise only: "name resolves last" and the glow fade-in are not built (the name is the LCP element); reduced motion and the announcements have e2e tests
-- [ ] Matches reference side by side; ~60fps laptop; JS before 3D < 150 KB gz; phone check — measured: 60 fps at every tier (Apple M5, headless Chrome, capped at 60); first-load JS +2.2 KB gz. Open: Sam's side-by-side verdict (screenshots in `docs/screenshots/phase-3/`) and the real phone check
+- [x] Matches reference side by side; ~60fps laptop; JS before 3D < 150 KB gz; phone check — measured: 60 fps at every tier (Apple M5, headless Chrome, capped at 60); first-load JS +2.2 KB gz. Side-by-side comparison (screenshots in `docs/screenshots/phase-3/`) and the real phone check passed (Sam, 2026-11-26); the gaps he saw are Phase 4's scope
 
 ## Phase 4 — Polish pass on the look
 **Lesson:** the last 10% is where "nice" becomes "what?!".
 - [ ] Diff against the reference fixed in order of visual impact
-- [ ] Hover/press states; ring damping tuned; detail panel motion; core-to-panel trace
+- [ ] Hover/press states; ring damping tuned; detail panel motion
 - [ ] Placeholder project icons in the reference style
 - [ ] Loading and no-WebGL fallback states
+- [ ] Start on the low tier when WebGL reports a software renderer
 - [ ] ui-auditor findings fixed; Lighthouse a11y ≥ 95
 
 ## Phase 5 — AI guide
@@ -83,21 +84,19 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-24 — Phase 3 built on `phase/3-ring`, waiting on Sam's reference and phone checks.** Phases 1, 2 and 2.5 are merged.
-- **Sam — to close Phase 3:** compare `docs/screenshots/phase-3/` (or the preview) with the two reference images, and try the ring on a real phone: swipe, tap the front panel, the bottom sheet, "List view". Then tick the last box.
+**2026-11-26 — Phase 4 started on `phase/4-polish`.** Phases 1, 2, 2.5 and 3 are merged.
+- **Phase 3 is closed:** Sam compared the ring with the two reference images and tried it on a real phone on 2026-11-26; both passed.
+- **Phase 4 plan:** panels first (near-square proportions, frosted blue-tinted fill, a soft glowing edge that spills onto the disc, then icon + pitch + status dot), then the halo and core, the platform reflection, the low tier for software renderers, the phone fixes (About hidden below 1024px, the sheet opens at the top with half and full snap points), hover and press states, ring damping, loading and no-WebGL states, and the ui-auditor pass.
+- **Decided:** the core-to-panel light trace is Phase 5 work (the guide drives it), so it is off the Phase 4 checklist. Starting on the low tier for software renderers moved from "Later" into Phase 4.
 - **Sam — securityheaders.com (A or better):** still open from Phase 1.
-- **Checks:** typecheck and lint clean; 145 unit tests; 43 e2e tests (15 for the ring). e2e runs WebGL in software, so it proves behavior, not speed.
-- **JavaScript:** first-load scripts 184,833 → 187,122 bytes gzipped (+2.2 KB: the loader, its error boundary, the nav toggle), same measuring method as Phase 2.5 — compare deltas only. That is inside the ~5 KB left of the 150 KB budget on the ui-auditor's scale; the budget was not raised. The lazy 3D chunk is 315 KB gzipped, untrimmed.
-- **Frame rate:** 60 fps idle and turning at high, medium and low, at 1440px and 375px, on an Apple M5 in headless Chrome with the GPU on. Headless caps at 60, so this shows no tier drops frames here, not how much headroom there is. Not measured on a mid laptop or any phone.
-- **Not what the plan said:** panel labels are plain DOM moved by the render loop, not drei `Html` (its first instance mounted empty); no transmission material; bloom needed a custom alpha fix and has `mipmapBlur` off; only a horizontal wheel turns the ring; the ring replaces the list only if the visitor is not already using it. All in docs/DECISIONS.md.
-- **Content:** ring order changed (Acme Invoice Agent is now 8, left of the front panel at rest). Acme's bullets come from its repo; "Human-in-the-loop" is gone because the repo has no human approval step, and the database is SQLite, not PostgreSQL. Check docs/AI_GUIDE.md's eval line "agents? → software-factory/acme-invoice-agent" still reads right in Phase 5.
-- **ui-auditor:** 3 high, 5 medium, 8 low. All high and medium fixed with e2e tests; low fixed except the ones under "Later". Not verified by anyone: Safari, Firefox, a real screen reader.
-- **Known gaps against the reference (Phase 4):** placeholder art on every panel, no pitch line or status dot on panels, the left panel's title is clipped at 375px, the ask bar (Phase 5).
+- **Baseline from Phase 3:** 145 unit tests; 43 e2e tests (15 for the ring); first-load scripts 187,122 bytes gzipped, with about 5 KB of the 150 KB budget left on the ui-auditor's scale; the lazy 3D chunk is 315 KB gzipped; 60 fps at every tier on an Apple M5 in headless Chrome (capped at 60, so no headroom figure). Not measured on a mid laptop or any phone. e2e runs WebGL in software, so it proves behavior, not speed.
+- **Known gaps against the reference at the start of Phase 4:** placeholder art on every panel, no pitch line or status dot on panels, washed-out side panels, a flat halo, the sphere sitting above the panels, no visible reflection on the disc, the left panel clipped at 375px. The ask bar is Phase 5.
+- **Not verified by anyone:** Safari, Firefox, a real screen reader.
+- **Content:** every project is `coming-soon`, posters are placeholders, and real posters must not become the LCP element. Check docs/AI_GUIDE.md's eval line "agents? → software-factory/acme-invoice-agent" still reads right in Phase 5.
 - **`?view=list`** keeps the ring from loading (the list e2e tests use it); **`?tier=high|medium|low`** pins the effects tier. The tier readout shows in `pnpm dev` only.
-- **Draft copy, placeholders, Phase 7 watch-out:** unchanged from Phase 2.5 — every project is `coming-soon`, posters are placeholders, and real posters must not become the LCP element.
 - **Local setup:** `brew install gitleaks` on a new machine. `PORT=3100 pnpm e2e` if port 3000 is taken.
 
 ## Later
 - Code room (if source sharing allowed and repos stay private) · custom domain · "More work" grid · Spanish version
 - Nav: underline the active section while scrolling · bottom sheet: drag the handle to dismiss · nav pill at full viewport width like the reference
-- Ring: blur on the non-front panels (high tier) · pitch line and status dot on panels · trim the 315 KB 3D chunk · render on demand under reduced motion · Tab from the non-modal panel should reach the ring · "name resolves last" intro · core-to-panel light trace (Phase 5) · start on the low tier when WebGL reports a software renderer, so no-GPU visitors never see the slow path
+- Ring: blur on the non-front panels (high tier) · pitch line and status dot on panels · trim the 315 KB 3D chunk · render on demand under reduced motion · Tab from the non-modal panel should reach the ring · "name resolves last" intro · core-to-panel light trace (Phase 5)
