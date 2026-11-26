@@ -178,6 +178,8 @@ test.describe("list view with JavaScript disabled", () => {
     // The Details buttons need JavaScript, so they are hidden; nothing else is lost.
     await expect(page.getByRole("button", { name: /^Details/ })).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    // The ring's slot needs JavaScript to ever be filled, so it takes no space here.
+    await expect(page.locator("[data-ring-slot]")).toBeHidden();
     await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeVisible();
     await expect(page.getByRole("region", { name: "About" }).getByRole("paragraph")).toHaveCount(4);
     await expect(page.getByRole("link", { name: "Download resume" })).toBeVisible();

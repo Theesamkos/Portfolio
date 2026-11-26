@@ -26,7 +26,8 @@ export function Hero() {
       id="top"
       data-hero
       aria-label="Introduction"
-      className="flex flex-col gap-6 pt-12 pb-14 md:gap-8 md:pt-20 md:pb-20"
+      // Little padding below: the ring's slot comes next. The list brings its own space.
+      className="flex flex-col gap-6 pt-12 pb-4 md:gap-8 md:pt-20"
     >
       <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-extrabold md:text-3xl">{site.name}</h1>
