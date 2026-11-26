@@ -29,8 +29,8 @@ test("the ring mounts after first paint, without console errors, and hides the l
   });
   page.on("pageerror", (error) => problems.push(error.message));
 
-  // The default tier on purpose: this is the one test that runs the full pipeline.
-  await openRing(page, "/");
+  // The high tier on purpose: this is the one test that runs the full pipeline.
+  await openRing(page, "/?tier=high");
 
   await expect(ring(page)).toHaveAccessibleName(/Software Factory is in front/);
   // The list is still in the DOM — hidden, not removed.
@@ -39,6 +39,22 @@ test("the ring mounts after first paint, without console errors, and hides the l
   // Panel titles are real DOM text, not pixels in the canvas.
   await expect(page.locator(".ring-stage").getByText("Software Factory")).toBeAttached();
   expect(problems).toEqual([]);
+});
+
+test("a software renderer starts on the low tier; ?tier= still wins", async ({ page }) => {
+  // Headless Chromium has no GPU here: it draws WebGL with SwiftShader, on the CPU.
+  const renderer = await page.evaluate(() => {
+    const gl = document.createElement("canvas").getContext("webgl2");
+    const info = gl?.getExtension("WEBGL_debug_renderer_info");
+    return gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+  });
+  test.skip(!/swiftshader|llvmpipe|software/i.test(renderer), `GPU renderer: ${renderer}`);
+
+  await openRing(page, "/");
+  await expect(page.locator("[data-tier]")).toHaveAttribute("data-tier", "low");
+
+  await openRing(page, "/?tier=medium");
+  await expect(page.locator("[data-tier]")).toHaveAttribute("data-tier", "medium");
 });
 
 test("arrow keys turn the ring and announce the project; Enter opens it", async ({ page }) => {

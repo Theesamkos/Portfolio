@@ -61,6 +61,8 @@ export function Renderer({
   return (
     <Canvas
       aria-hidden="true"
+      // For tests and debugging: which effects tier is being drawn.
+      data-tier={tier}
       flat
       frameloop={running ? "always" : "never"}
       dpr={DPR[tier]}
