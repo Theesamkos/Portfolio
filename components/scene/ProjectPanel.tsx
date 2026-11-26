@@ -33,6 +33,8 @@ const FRONT_SCALE = 1.12;
 /** Side panels stay readable; the front one is brightest because it alone is at 1. */
 const OTHER_OPACITY = 0.9;
 const HOVER_LIFT = 0.06;
+/** How far a panel gives while the pointer is held down on it. */
+const PRESS_SCALE = 0.97;
 /**
  * The front edge is drawn brighter than bloom's threshold (Effects.tsx) so it glows —
  * but only just: far over the threshold the line turns into a hard saturated stroke.
@@ -128,6 +130,7 @@ export function ProjectPanel({
   const aura = useRef<MeshBasicMaterial>(null);
   const art = useRef<MeshBasicMaterial>(null);
   const hovered = useRef(false);
+  const pressed = useRef(false);
   /** The element the hover cursor was set on, so it can be reset on unmount. */
   const cursorTarget = useRef<HTMLElement | null>(null);
 
@@ -176,10 +179,12 @@ export function ProjectPanel({
     const visible = appear * depthFade;
 
     if (body.current) {
+      const press = pressed.current && !ringInput.dragging ? PRESS_SCALE : 1;
       const scale = ease(
         body.current.scale.x,
-        isFront ? FRONT_SCALE : 1,
-        tokens.ringRate,
+        (isFront ? FRONT_SCALE : 1) * press,
+        // The press answers at hover speed; growing to the front follows the ring.
+        pressed.current ? tokens.hoverRate : tokens.ringRate,
         delta,
         reducedMotion,
       );
@@ -303,8 +308,15 @@ export function ProjectPanel({
               target.style.cursor = "pointer";
             }
           }}
+          onPointerDown={() => {
+            pressed.current = true;
+          }}
+          onPointerUp={() => {
+            pressed.current = false;
+          }}
           onPointerOut={() => {
             hovered.current = false;
+            pressed.current = false;
             if (cursorTarget.current) cursorTarget.current.style.cursor = "";
           }}
         >

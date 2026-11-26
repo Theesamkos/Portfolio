@@ -238,7 +238,7 @@ export function DetailPanel({ projects }: { projects: readonly FeaturedProject[]
                 aria-label="Close project details"
                 ref={closeRef}
                 onClick={() => focusProject(null)}
-                className="text-ink hover:bg-accent-soft duration-hover -mr-2 inline-flex size-11 cursor-pointer items-center justify-center rounded-full transition-colors"
+                className="text-ink hover:bg-accent-soft pressable -mr-2 inline-flex size-11 cursor-pointer items-center justify-center rounded-full"
               >
                 <CloseIcon />
               </button>

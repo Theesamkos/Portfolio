@@ -3,7 +3,7 @@
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/icons";
 
 const arrowClass =
-  "glass text-ink hover:bg-accent-soft duration-hover inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors";
+  "glass text-ink hover:bg-accent-soft pressable inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full";
 
 /**
  * The row under the ring (docs/DESIGN.md): ← · "Drag or use ← → to explore" · →.

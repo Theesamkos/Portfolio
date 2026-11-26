@@ -56,7 +56,7 @@ export default function HomePage() {
                 <a
                   href={href}
                   rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer me"}
-                  className="text-accent-ink inline-flex min-h-11 items-center text-sm break-all underline-offset-4 hover:underline"
+                  className="text-accent-ink hover:text-accent-hover duration-hover inline-flex min-h-11 items-center text-sm break-all underline-offset-4 transition-colors hover:underline"
                 >
                   {text}
                 </a>

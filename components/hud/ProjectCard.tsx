@@ -23,7 +23,9 @@ export function ProjectCard({ project, total }: { project: FeaturedProject; tota
       // No blur: only the page gradient is behind a card, and blurring a gradient
       // changes nothing visible (docs/DECISIONS.md).
       blur={false}
-      className="relative flex h-full flex-col overflow-hidden"
+      // The whole card is the Details trigger's click target, so the whole card answers
+      // the pointer: it lifts 6px and its edge picks up the accent (docs/DESIGN.md).
+      className="hover:border-accent/40 duration-hover relative flex h-full flex-col overflow-hidden transition-[translate,border-color] ease-out hover:-translate-y-1.5"
     >
       <Poster project={project} total={total} />
 

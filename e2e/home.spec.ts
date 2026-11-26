@@ -107,6 +107,25 @@ for (const viewport of [
   });
 }
 
+test("hover and press: a card lifts 6px, a button gives under the pointer", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(LIST);
+
+  const button = page.getByRole("link", { name: "View projects" });
+  const box = (await button.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(button).toHaveCSS("scale", "0.97");
+  await page.mouse.up();
+  await expect(button).toHaveCSS("scale", "none");
+
+  const card = page.getByRole("article").first();
+  await card.scrollIntoViewIfNeeded();
+  await card.hover();
+  await expect(card).toHaveCSS("translate", "0px -6px");
+  await expect(card).toHaveCSS("transition-duration", "0.15s");
+});
+
 test.describe("list view at 375px", () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
