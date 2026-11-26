@@ -333,9 +333,9 @@ export default function RingScene({
                 </span>
                 {/* The carousel's panes are too small for a second line of text; there
                     the pitch is one tap away, in the sheet. */}
-                <span className="text-ink-dim hidden text-xs leading-snug lg:block">
-                  {project.pitch}
-                </span>
+                {/* Full ink, not the dimmer shade: the pane under it is tinted glass over
+                    a moving scene, and the dim shade fell under 4.5:1 on parts of it. */}
+                <span className="hidden text-xs leading-snug lg:block">{project.pitch}</span>
               </span>
             </div>
           ))}
