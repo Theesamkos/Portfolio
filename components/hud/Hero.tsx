@@ -56,7 +56,7 @@ export function Hero() {
                 <a
                   href={href}
                   rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer me"}
-                  className="text-ink hover:text-accent-ink duration-hover inline-flex min-h-11 items-center gap-2 text-sm font-medium transition-colors"
+                  className="text-ink hover:text-accent-ink pressable inline-flex min-h-11 items-center gap-2 text-sm font-medium"
                 >
                   {contactIcons[label]}
                   {label}

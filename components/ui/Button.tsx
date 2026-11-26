@@ -24,11 +24,13 @@ type ActionProps = Shared & { href?: undefined } & ComponentPropsWithoutRef<"but
 export type ButtonProps = LinkProps | ActionProps;
 
 const base =
-  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold whitespace-nowrap transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold pressable whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-on-accent hover:bg-accent-hover",
-  secondary: "border-line bg-glass text-ink hover:bg-accent-soft border",
+  primary:
+    "bg-accent text-on-accent hover:bg-accent-hover hover:shadow-glass active:bg-accent-hover",
+  secondary:
+    "border-line bg-glass text-ink hover:border-accent/40 hover:bg-accent-soft active:bg-accent-soft border",
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary", className = ""): string {

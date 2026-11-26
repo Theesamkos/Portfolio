@@ -29,10 +29,10 @@ export function ProjectCardTrigger({ id, title }: { id: ProjectId; title: string
         event.currentTarget.focus();
         focusProject(id);
       }}
-      className="text-accent-ink after:rounded-panel duration-hover inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold underline-offset-4 transition-colors after:absolute after:inset-0 hover:underline [@media(scripting:none)]:hidden"
+      className="text-accent-ink after:rounded-panel group/trigger inline-flex min-h-11 cursor-pointer items-center gap-1.5 text-sm font-semibold underline-offset-4 after:absolute after:inset-0 hover:underline [@media(scripting:none)]:hidden"
     >
       Details
-      <ArrowRightIcon className="size-4" />
+      <ArrowRightIcon className="duration-hover size-4 transition-transform group-hover/trigger:translate-x-0.5" />
     </button>
   );
 }

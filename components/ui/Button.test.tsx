@@ -64,6 +64,16 @@ describe("Button", () => {
     expect(icon().compareDocumentPosition(label()) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
+  test("both variants carry the shared hover and press behavior", () => {
+    render(
+      <>
+        <Button>Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+      </>,
+    );
+    for (const button of screen.getAllByRole("button")) expect(button).toHaveClass("pressable");
+  });
+
   test("className is appended, not replaced", () => {
     render(
       <Button href="#a" className="w-full">

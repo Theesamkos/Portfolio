@@ -11,7 +11,7 @@ const MENU_ID = "site-menu";
 const menuLinks = navLinks.filter(({ href }) => href !== "#about");
 
 const linkClass =
-  "text-ink hover:text-accent-ink duration-hover inline-flex min-h-11 items-center px-1 text-base font-medium transition-colors";
+  "text-ink hover:text-accent-ink pressable inline-flex min-h-11 items-center px-1 text-base font-medium";
 
 /**
  * The sticky glass nav bar (docs/DESIGN.md). Desktop: name, anchor links, "List view"
@@ -60,7 +60,7 @@ export function NavBar() {
             type="button"
             popoverTarget={MENU_ID}
             aria-label="Menu"
-            className="border-line bg-glass text-ink hover:bg-accent-soft duration-hover inline-flex size-11 cursor-pointer items-center justify-center rounded-full border transition-colors lg:hidden"
+            className="border-line bg-glass text-ink hover:border-accent/40 hover:bg-accent-soft pressable inline-flex size-11 cursor-pointer items-center justify-center rounded-full border lg:hidden"
           >
             <MenuIcon />
           </button>
