@@ -41,6 +41,61 @@ test("the ring mounts after first paint, without console errors, and hides the l
   expect(problems).toEqual([]);
 });
 
+for (const viewport of [
+  { width: 1280, height: 800 },
+  { width: 375, height: 812 },
+]) {
+  test(`the ring takes its reserved slot without shifting the page at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    // Sum every layout shift the browser reports, as Lighthouse does for CLS.
+    await page.addInitScript(() => {
+      const state = window as unknown as { layoutShift: number };
+      state.layoutShift = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const shift = entry as PerformanceEntry & { value: number; hadRecentInput: boolean };
+          if (!shift.hadRecentInput) state.layoutShift += shift.value;
+        }
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    await page.goto("/?tier=low");
+
+    // The slot is in the server's HTML at full height, before any 3D code has run.
+    const slot = page.locator("[data-ring-slot]");
+    const reserved = (await slot.boundingBox())!;
+    expect(reserved.height).toBeGreaterThan(300);
+
+    await expect(page.locator("html")).toHaveAttribute("data-view", "ring", { timeout: 20_000 });
+    await expect(page.locator("[data-project-list]")).toBeHidden();
+    // Let the list's fade and the ring's intro finish, then compare.
+    await page.waitForTimeout(1500);
+
+    const filled = (await slot.boundingBox())!;
+    expect(filled.y).toBe(reserved.y);
+    expect(filled.height).toBe(reserved.height);
+    const shift = await page.evaluate(
+      () => (window as unknown as { layoutShift: number }).layoutShift,
+    );
+    expect(shift).toBeLessThan(0.1);
+  });
+}
+
+test("the slot gives its space back when there is no ring to show", async ({ page }) => {
+  // ?view=list: taken back while hydrating, so the list sits right under the hero.
+  await page.goto("/?view=list");
+  await expect(page.locator("[data-ring-slot]")).toHaveCSS("height", "0px");
+
+  // "List view" after the ring has loaded: the same.
+  await openRing(page);
+  await expect(page.locator("[data-ring-slot]")).not.toHaveCSS("height", "0px");
+  await page.getByRole("button", { name: "List view" }).click();
+  await expect(page.locator("[data-ring-slot]")).toHaveCSS("height", "0px");
+  await page.getByRole("button", { name: "Ring view" }).click();
+  await expect(page.locator("[data-ring-slot]")).not.toHaveCSS("height", "0px");
+});
+
 test("a software renderer starts on the low tier; ?tier= still wins", async ({ page }) => {
   // Headless Chromium has no GPU here: it draws WebGL with SwiftShader, on the CPU.
   const renderer = await page.evaluate(() => {
@@ -272,6 +327,8 @@ test("a visitor already reading the list keeps it when the ring arrives late", a
   await expect(page.getByRole("article")).toHaveCount(8);
   await expect(details).toBeFocused();
   expect(await page.evaluate(() => window.scrollY)).toBe(before);
+  // The slot above the list is still reserved; it offers the ring instead of sitting empty.
+  await expect(page.getByRole("button", { name: "Show the 3D ring" })).toBeAttached();
 
   await page.getByRole("banner").getByRole("button", { name: "Ring view" }).click();
   await expect(page.locator("canvas")).toBeVisible();

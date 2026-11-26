@@ -146,6 +146,35 @@ html {
  */
 html[data-view="ring"] [data-project-list] {
   display: none;
+  opacity: 0;
+}
+
+/*
+ * The list sits below the ring's reserved slot (components/hud/RingStage.tsx), so
+ * taking it away moves nothing above it: it only fades. `allow-discrete` keeps it
+ * rendered until the fade has played; `@starting-style` fades it back in.
+ */
+[data-project-list] {
+  transition:
+    opacity var(--motion-panel) ease-out,
+    display var(--motion-panel) allow-discrete;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/*
+ * In ring view the projects section keeps most of the screen's height, so what comes
+ * after it (About, the footer) stays below the first screen when the list goes —
+ * otherwise it would jump up into view. The subtracted height is the nav and hero.
+ */
+html[data-view="ring"] #projects {
+  min-height: calc(100svh - 27rem);
+}
+@media (min-width: 1024px) {
+  html[data-view="ring"] #projects {
+    min-height: calc(100svh - 21rem);
+  }
 }
 
 /*
@@ -164,11 +193,6 @@ html[data-view="ring"] [data-project-list] {
   html[data-view="ring"]:has(dialog.detail-panel[open]) [data-hero] {
     padding-right: var(--detail-panel-space);
   }
-}
-
-/* The ring sits right under the hero line, so the hero gives up its bottom padding. */
-html[data-view="ring"] [data-hero] {
-  padding-bottom: 1rem;
 }
 
 body {

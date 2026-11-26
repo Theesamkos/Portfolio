@@ -19,7 +19,7 @@ export function ProjectList({
   return (
     <section id="projects" aria-labelledby="projects-heading" className="relative">
       {ring}
-      <div data-project-list className="flex flex-col gap-6">
+      <div data-project-list className="flex flex-col gap-6 pt-10 md:pt-16">
         <div className="border-line flex items-baseline justify-between gap-4 border-b pb-3">
           <h2 id="projects-heading" className="text-xl font-bold">
             Featured projects
