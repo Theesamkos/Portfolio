@@ -16,7 +16,7 @@ Project {
   team?: { name: string; role: string }   // for team projects
   links: { demo?: url; repo?: url; video?: url }
   stack: string[]
-  assets: { poster: string; screenshots: string[] }
+  assets: { poster: string; icon: string; screenshots: string[] }
   order: number         // ring position
 }
 ```
@@ -49,7 +49,8 @@ Set `status` from what actually works on launch day: `live` only if the demo lin
 ## Assets per project (`public/projects/<id>/`)
 | File | Spec |
 |---|---|
-| `poster.webp` | 1600×1000, < 200 KB — used on ring panel + OG image |
+| `poster.webp` | 1600×1000, < 200 KB — used on the list card + OG image |
+| `icon.svg` | The icon on the ring panel. Self-contained SVG under 4 KB with `width`/`height` set (it is drawn as a WebGL texture). Generated placeholders until Phase 7 |
 | `shot-1..5.webp` | 1600px wide, < 250 KB each, real UI from a real run |
 | demo video | 60–90s, 1080p, hosted on YouTube (unlisted) or Vercel Blob; link in `links.video` |
 
