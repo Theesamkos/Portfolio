@@ -311,7 +311,7 @@ export function ProjectPanel({
           {tier === "high" ? (
             <meshPhysicalMaterial
               ref={glass}
-              color={tokens.accentSoft}
+              color={tokens.glassTint}
               transparent
               opacity={0}
               roughness={0.18}
@@ -323,7 +323,7 @@ export function ProjectPanel({
           ) : (
             <meshStandardMaterial
               ref={glass}
-              color={tokens.accentSoft}
+              color={tokens.glassTint}
               transparent
               opacity={0}
               roughness={0.25}
