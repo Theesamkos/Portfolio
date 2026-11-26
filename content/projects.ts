@@ -9,8 +9,8 @@ import { projectIdEnum, projectSchema, type Project, type ProjectInput } from "@
  * the pitch and skills in docs/CONTENT.md. They state no metrics on purpose. Phase 7
  * replaces them with copy checked against each repo.
  *
- * Placeholders until Phase 7: `assets.poster` is a generated SVG, `screenshots` is
- * empty, and every `status` is "coming-soon" until a demo or video link is verified.
+ * Placeholders until Phase 7: `assets.poster` and `assets.icon` are generated SVGs,
+ * `screenshots` is empty, and every `status` is "coming-soon" until a demo or video link is verified.
  * `links.repo` is set only for public repos (the schema rejects it otherwise).
  */
 const seed = [
@@ -29,7 +29,11 @@ const seed = [
     visibility: "private",
     links: {},
     stack: [],
-    assets: { poster: "/projects/software-factory/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/software-factory/poster.svg",
+      icon: "/projects/software-factory/icon.svg",
+      screenshots: [],
+    },
     order: 1,
   },
   {
@@ -47,7 +51,11 @@ const seed = [
     visibility: "public",
     links: { repo: "https://github.com/Theesamkos/math-tiles" },
     stack: ["PWA"],
-    assets: { poster: "/projects/math-tiles/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/math-tiles/poster.svg",
+      icon: "/projects/math-tiles/icon.svg",
+      screenshots: [],
+    },
     order: 2,
   },
   {
@@ -65,7 +73,11 @@ const seed = [
     visibility: "public",
     links: { repo: "https://github.com/Theesamkos/chatbridge" },
     stack: ["tRPC"],
-    assets: { poster: "/projects/chatbridge/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/chatbridge/poster.svg",
+      icon: "/projects/chatbridge/icon.svg",
+      screenshots: [],
+    },
     order: 3,
   },
   {
@@ -83,7 +95,11 @@ const seed = [
     visibility: "private",
     links: {},
     stack: ["FastAPI"],
-    assets: { poster: "/projects/legacylens/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/legacylens/poster.svg",
+      icon: "/projects/legacylens/icon.svg",
+      screenshots: [],
+    },
     order: 4,
   },
   {
@@ -103,7 +119,11 @@ const seed = [
     team: { name: "Gauntlet AI capstone team", role: "Product lead and research lead" },
     links: {},
     stack: ["MediaPipe"],
-    assets: { poster: "/projects/sentinel-six/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/sentinel-six/poster.svg",
+      icon: "/projects/sentinel-six/icon.svg",
+      screenshots: [],
+    },
     order: 5,
   },
   {
@@ -121,7 +141,11 @@ const seed = [
     visibility: "public",
     links: { repo: "https://github.com/Theesamkos/autonomous-ad-engine" },
     stack: [],
-    assets: { poster: "/projects/autonomous-ad-engine/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/autonomous-ad-engine/poster.svg",
+      icon: "/projects/autonomous-ad-engine/icon.svg",
+      screenshots: [],
+    },
     order: 6,
   },
   {
@@ -139,7 +163,11 @@ const seed = [
     visibility: "private",
     links: {},
     stack: [],
-    assets: { poster: "/projects/servicecore/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/servicecore/poster.svg",
+      icon: "/projects/servicecore/icon.svg",
+      screenshots: [],
+    },
     order: 7,
   },
   {
@@ -158,7 +186,11 @@ const seed = [
     visibility: "public",
     links: { repo: "https://github.com/Theesamkos/acme-invoice-agent" },
     stack: ["LangGraph"],
-    assets: { poster: "/projects/acme-invoice-agent/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/acme-invoice-agent/poster.svg",
+      icon: "/projects/acme-invoice-agent/icon.svg",
+      screenshots: [],
+    },
     order: 8,
   },
 ] as const satisfies readonly ProjectInput[];
