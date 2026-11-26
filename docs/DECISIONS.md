@@ -2,6 +2,11 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-26 · The ring's slot is reserved in the server HTML
+- **Context:** the scene mounted invisibly at zero height and, once ready, took the list's place. Replacing a tall list with a short ring moved the whole projects section, and the hero's padding changed with the view too. Lighthouse measured CLS 0.44 (mobile) and 0.51 (desktop) and performance 46 and 62 in ring view.
+- **Decision:** `RingStage.tsx` renders the ring's slot on the server at the ring's final height, above the list. The scene fills the slot; the list fades out below it (`display` with `allow-discrete`). The hero's padding is the same in both views, and in ring view the projects section keeps most of the screen's height so later sections do not jump into view. The slot collapses only when there will be no ring: `@media (scripting: none)`, `?view=list` (read with `useSyncExternalStore` so it happens during hydration, before paint), no WebGL, a failed scene (CSS `:has()` on the note), or "List view".
+- **Consequence:** CLS 0 and performance 97 / 100 in ring view. While the scene loads, the first screen shows the hero and an empty slot with "Loading 3D view", and the list starts below it — the list is no longer the first thing under the hero for visitors who will get the ring. `SLOT_HEIGHT` must be kept equal to the stage plus controls in `RingScene.tsx`; an e2e test compares them. This refines the 2026-11-24 entry below: the ring still takes over only when ready and the visitor is not using the list, and that visitor now gets a "Show the 3D ring" button in the slot.
+
 ## 2026-11-26 · The bottom sheet's drag is hand-written, with two snap points
 - **Context:** on a phone the detail sheet covered 85% of the screen at once, and its handle was decoration. Sam asked for half height first and full on drag up.
 - **Decision:** no sheet library. The handle is a real button: pointer events with pointer capture write the sheet's height straight to the element while dragging (no React state per move), and a pure function in `lib/sheet.ts` decides where it settles (half, full or closed) from its height and speed at release. Pressing the handle toggles half and full, so it works from a keyboard and a screen reader.
