@@ -3,6 +3,7 @@
 import { MeshReflectorMaterial } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, SRGBColorSpace } from "three";
+import { lightPool } from "./textures";
 import type { Tier } from "@/store/ui";
 import type { RingLayout } from "./layout";
 import type { SceneTokens } from "./tokens";
@@ -60,6 +61,8 @@ export function Platform({
   const reflective = tier === "high" && !layout.compact;
   const baked = useMemo(() => bakedFloor(tokens), [tokens]);
   useEffect(() => () => baked.dispose(), [baked]);
+  const pool = useMemo(() => lightPool(tokens), [tokens]);
+  useEffect(() => () => pool.dispose(), [pool]);
 
   return (
     <group position-y={layout.platformY}>
@@ -81,6 +84,18 @@ export function Platform({
         ) : (
           <meshBasicMaterial map={baked} transparent opacity={0.6} depthWrite={false} />
         )}
+      </mesh>
+
+      {/* The front panel's glow, spilled onto the disc. The front of the ring is always
+          the same spot — the ring turns, this does not — so it never needs to move. */}
+      <mesh
+        rotation-x={-Math.PI / 2}
+        position={[0, 0.012, layout.radius + 0.1]}
+        scale={[layout.panelWidth * 1.9, 1.5, 1]}
+        renderOrder={-1}
+      >
+        <planeGeometry />
+        <meshBasicMaterial map={pool} transparent opacity={0.75} depthWrite={false} />
       </mesh>
 
       {/* The disc's edge: a shallow glass wall below the surface. */}

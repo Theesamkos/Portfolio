@@ -1,4 +1,4 @@
-import { Path, Shape } from "three";
+import { Path, Shape, type BufferGeometry } from "three";
 
 function roundedRectPath<T extends Path>(
   path: T,
@@ -37,4 +37,18 @@ export function roundedFrame(
     roundedRectPath(new Path(), width - thickness, height - thickness, radius - thickness / 2),
   );
   return frame;
+}
+
+/**
+ * A `ShapeGeometry`'s texture coordinates are its vertex positions in world units,
+ * not 0–1. This rescales them so a texture covers a `width` × `height` shape exactly
+ * once, the way it would on a plane.
+ */
+export function fitUvs<T extends BufferGeometry>(geometry: T, width: number, height: number): T {
+  const uv = geometry.getAttribute("uv");
+  for (let index = 0; index < uv.count; index += 1) {
+    uv.setXY(index, uv.getX(index) / width + 0.5, uv.getY(index) / height + 0.5);
+  }
+  uv.needsUpdate = true;
+  return geometry;
 }

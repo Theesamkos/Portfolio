@@ -29,7 +29,10 @@ export function CameraRig({
     const camera = state.camera as PerspectiveCamera;
     const aspect = state.size.width / Math.max(1, state.size.height);
     const halfFov = Math.tan((camera.fov * Math.PI) / 360);
-    const fit = Math.max(layout.minDistance, layout.fitWidth / 2 / (halfFov * aspect));
+    const fit = Math.max(
+      layout.minDistance,
+      layout.fitDepth + layout.fitWidth / 2 / (halfFov * aspect),
+    );
 
     const selected = useUiStore.getState().activeProjectId !== null;
     const shift = selected ? layout.activeShift : 0;

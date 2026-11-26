@@ -6,10 +6,11 @@ import { ExtrudeGeometry, PlaneGeometry, ShapeGeometry, type Group } from "three
 import type { ProjectId } from "@/content/projects";
 import { dampingFor, rotationFor } from "@/lib/ring";
 import { useUiStore, type Tier } from "@/store/ui";
-import { roundedFrame, roundedRect } from "./geometry";
+import { fitUvs, roundedFrame, roundedRect } from "./geometry";
 import { ease, ringInput, type IntroClock } from "./input";
 import { panelCenterY, type RingLayout } from "./layout";
-import { ProjectPanel, type PanelGeometry } from "./ProjectPanel";
+import { AURA_SCALE, ProjectPanel, type PanelGeometry, type PanelTextures } from "./ProjectPanel";
+import { edgeAura, paneTint } from "./textures";
 import type { SceneTokens } from "./tokens";
 
 /** What the ring needs to know about a project — the page passes only this. */
@@ -54,17 +55,33 @@ export function Ring({
         bevelEnabled: false,
         curveSegments: 10,
       }),
-      edge: new ShapeGeometry(roundedFrame(width, height, radius, 0.022), 10),
+      tint: fitUvs(new ShapeGeometry(roundedRect(width, height, radius), 10), width, height),
+      edge: new ShapeGeometry(roundedFrame(width, height, radius, 0.012), 10),
+      aura: new PlaneGeometry(width * AURA_SCALE, height * AURA_SCALE),
       poster: new PlaneGeometry(art, art),
     };
   }, [layout]);
   useEffect(
     () => () => {
-      geometry.glass.dispose();
-      geometry.edge.dispose();
-      geometry.poster.dispose();
+      for (const part of Object.values(geometry)) part.dispose();
     },
     [geometry],
+  );
+
+  // And one set of textures: the same tint and glow on every pane.
+  const textures = useMemo<PanelTextures>(() => {
+    const aspect = layout.panelWidth / layout.panelHeight;
+    return {
+      tint: paneTint(tokens),
+      aura: edgeAura(tokens, aspect, (1 - 1 / AURA_SCALE) / 2),
+    };
+  }, [layout, tokens]);
+  useEffect(
+    () => () => {
+      textures.tint.dispose();
+      textures.aura.dispose();
+    },
+    [textures],
   );
 
   useFrame((_, delta) => {
@@ -102,6 +119,7 @@ export function Ring({
           tokens={tokens}
           tier={tier}
           geometry={geometry}
+          textures={textures}
           introRef={introRef}
           reducedMotion={reducedMotion}
         />
