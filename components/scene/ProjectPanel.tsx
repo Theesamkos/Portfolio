@@ -16,7 +16,6 @@ import {
   Vector3,
 } from "three";
 import type { ProjectId } from "@/content/projects";
-import { posterSvg } from "@/lib/poster-art";
 import { facing, panelAngle } from "@/lib/ring";
 import { useUiStore, type Tier } from "@/store/ui";
 import { ease, ringInput, ringLabels, type IntroClock } from "./input";
@@ -39,6 +38,12 @@ const HOVER_LIFT = 0.06;
  * but only just: far over the threshold the line turns into a hard saturated stroke.
  */
 const EDGE_BOOST = 5;
+/**
+ * The low tier has no post-processing pass, so the browser blends the canvas into the
+ * page itself and translucent layers come out heavier. The tint is thinned to match;
+ * at full strength the pitch would sit on a band too dark for its contrast.
+ */
+const LOW_TIER_TINT = 0.4;
 /** The glow texture is this much larger than the pane it sits behind. */
 export const AURA_SCALE = 1.5;
 /**
@@ -80,9 +85,9 @@ export type PanelGeometry = {
 export type PanelTextures = { tint: Texture; aura: Texture };
 
 /**
- * One project on the ring: a rounded pane of glass, the project's art and an outline
- * that lights up when the panel is in front. Its title and `01 / 08` label are real
- * DOM text (rendered by RingScene, never baked into a texture); this component only
+ * One project on the ring: a rounded pane of glass, the project's icon and an outline
+ * that lights up when the panel is in front. Its title, pitch and `01 / 08` label are
+ * real DOM text (rendered by RingScene, never baked into a texture); this component only
  * tells that DOM node where the pane is on screen.
  *
  * Everything that moves — scale, lift, opacity, glow — is eased in `useFrame` by
@@ -90,7 +95,7 @@ export type PanelTextures = { tint: Texture; aura: Texture };
  */
 export function ProjectPanel({
   id,
-  order,
+  icon,
   index,
   count,
   layout,
@@ -102,7 +107,8 @@ export function ProjectPanel({
   reducedMotion,
 }: {
   id: ProjectId;
-  order: number;
+  /** Path of the project's icon under `public/`. */
+  icon: string;
   index: number;
   count: number;
   layout: RingLayout;
@@ -134,12 +140,13 @@ export function ProjectPanel({
       tier === "low" ? new Color(tokens.accent) : new Color(tokens.glow).multiplyScalar(EDGE_BOOST),
     [tokens.accent, tokens.glow, tier],
   );
+  // The icon is an SVG file drawn as a texture. The browser rasterizes it once at the
+  // size written in the file; a failed download just leaves the pane without art.
   const poster = useMemo(() => {
-    const svg = posterSvg(order, count, { accent: tokens.accent, glow: tokens.glow });
-    const texture = new TextureLoader().load(`data:image/svg+xml,${encodeURIComponent(svg)}`);
+    const texture = new TextureLoader().load(icon);
     texture.colorSpace = SRGBColorSpace;
     return texture;
-  }, [order, count, tokens.accent, tokens.glow]);
+  }, [icon]);
   useEffect(() => () => poster.dispose(), [poster]);
   // A panel can unmount while hovered; don't leave the pointer cursor behind.
   useEffect(
@@ -200,7 +207,7 @@ export function ProjectPanel({
         reducedMotion || appear < 1,
       );
     }
-    if (tint.current) tint.current.opacity = dim * visible;
+    if (tint.current) tint.current.opacity = dim * visible * (tier === "low" ? LOW_TIER_TINT : 1);
     if (frame.current) frame.current.opacity = 0.9 * dim * visible;
     const glow = (isFront ? 1 : hovered.current ? 0.45 : 0) * visible;
     if (edge.current) {
@@ -360,7 +367,7 @@ export function ProjectPanel({
 
         <mesh
           geometry={geometry.poster}
-          position={[0, layout.panelHeight * 0.06, 0.024]}
+          position={[0, layout.panelHeight * 0.1, 0.024]}
           raycast={() => null}
         >
           <meshBasicMaterial ref={art} map={poster} transparent opacity={0} depthWrite={false} />

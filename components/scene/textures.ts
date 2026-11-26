@@ -36,7 +36,7 @@ export function paneTint(tokens: SceneTokens): CanvasTexture {
   return draw(4, 128, (context) => {
     const gradient = context.createLinearGradient(0, 0, 0, 128);
     // On the pane's face the canvas ends up bottom-first: stop 0 is the bottom edge.
-    gradient.addColorStop(0, withAlpha(tokens.bgGlow, 0.4));
+    gradient.addColorStop(0, withAlpha(tokens.bgGlow, 0.28));
     gradient.addColorStop(0.55, withAlpha(tokens.bgGlow, 0.1));
     gradient.addColorStop(0.85, withAlpha(tokens.white, 0.15));
     gradient.addColorStop(1, withAlpha(tokens.white, 0.6));

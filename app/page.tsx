@@ -9,7 +9,14 @@ import { projects } from "@/content/projects";
 import { site } from "@/lib/site";
 
 /** The ring gets only the fields it draws, so the rest of the content stays on the server. */
-const ringProjects = projects.map(({ id, title, order }) => ({ id, title, order }));
+const ringProjects = projects.map(({ id, title, pitch, status, order, assets }) => ({
+  id,
+  title,
+  pitch,
+  status,
+  order,
+  icon: assets.icon,
+}));
 
 /**
  * The list view — the real site. The content is all Server Components, so it arrives
