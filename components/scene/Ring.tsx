@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { ExtrudeGeometry, PlaneGeometry, ShapeGeometry, type Group } from "three";
 import type { ProjectId } from "@/content/projects";
 import type { ProjectStatus } from "@/lib/schema";
-import { dampingFor, rotationFor } from "@/lib/ring";
+import { dampingFor, rotationFor, smoothDamp, type Spring } from "@/lib/ring";
 import { useUiStore, type Tier } from "@/store/ui";
 import { fitUvs, roundedFrame, roundedRect } from "./geometry";
 import { ease, ringInput, type IntroClock } from "./input";
@@ -33,8 +33,9 @@ const DRAG_RATE = dampingFor(0.08);
  *
  * This is the render-loop lesson in one place. React state (the store) says *which*
  * project is in front. `useFrame` runs once per frame and moves the group's rotation
- * a little closer to the angle that puts that project in front. The store is read
- * with `getState()`, so turning the ring re-renders nothing.
+ * a little closer to the angle that puts that project in front — with a spring
+ * (`smoothDamp`), so it has weight. The store is read with `getState()`, so turning
+ * the ring re-renders nothing.
  */
 export function Ring({
   projects,
@@ -52,6 +53,8 @@ export function Ring({
   reducedMotion: boolean;
 }) {
   const group = useRef<Group>(null);
+  /** The ring's rotation and how fast it is turning — a ref, advanced every frame. */
+  const spin = useRef<Spring>({ value: 0, velocity: 0 });
   const count = projects.length;
 
   // One set of geometry shared by all panels.
@@ -102,16 +105,23 @@ export function Ring({
       0,
       projects.findIndex((project) => project.id === frontId),
     );
-    const goal = ringInput.dragging
-      ? ringInput.anchor + ringInput.drag
-      : rotationFor(frontIndex, count, ring.rotation.y);
-    ring.rotation.y = ease(
-      ring.rotation.y,
-      goal,
-      ringInput.dragging ? DRAG_RATE : tokens.ringRate,
-      delta,
-      reducedMotion && !ringInput.dragging,
-    );
+    const turn = spin.current;
+    if (ringInput.dragging) {
+      // Stick to the pointer, and measure the speed: on release the spring starts
+      // from it, so the ring keeps moving the way it was thrown instead of stopping
+      // dead and starting again.
+      const next = ease(turn.value, ringInput.anchor + ringInput.drag, DRAG_RATE, delta, false);
+      if (delta > 0) turn.velocity = (next - turn.value) / delta;
+      turn.value = next;
+    } else if (reducedMotion) {
+      turn.value = rotationFor(frontIndex, count, turn.value);
+      turn.velocity = 0;
+    } else {
+      // A spring with weight: eases in, carries momentum, settles without overshoot,
+      // and lands exactly on the target — so a ring at rest writes nothing.
+      smoothDamp(turn, rotationFor(frontIndex, count, turn.value), tokens.ringSmoothTime, delta);
+    }
+    ring.rotation.y = turn.value;
     ringInput.rotation = ring.rotation.y;
     introRef.current += delta;
   });
