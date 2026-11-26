@@ -135,6 +135,8 @@ test("?view=list never loads the ring", async ({ page }) => {
   await expect(page.getByRole("article")).toHaveCount(8);
   await page.waitForTimeout(2500);
   await expect(page.locator("canvas")).toHaveCount(0);
+  // Nothing was attempted, so there is nothing to explain.
+  await expect(page.locator("[data-ring-note]")).toHaveCount(0);
 });
 
 test("at 375px the ring is a carousel: it mounts, steps, and does not scroll sideways", async ({
@@ -205,11 +207,50 @@ async function onLazyScripts(
 test("if the 3D chunk fails to load, the list is still the page", async ({ page }) => {
   await onLazyScripts(page, (route) => route.abort());
   await page.goto("/");
-  await page.waitForTimeout(3000);
 
+  // A note takes the scene's place; the loading line is gone.
+  await expect(page.getByText("3D view isn't available here")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-ring-note="loading"]')).toBeHidden();
   await expect(page.getByRole("heading", { level: 1, name: "Samuel Orth" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(8);
   await expect(page.locator("canvas")).toHaveCount(0);
+});
+
+test("without WebGL the list is the page, with a note saying so", async ({ page }) => {
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args) {
+      if (String(args[0]).startsWith("webgl")) return null;
+      return Reflect.apply(getContext, this, args) as RenderingContext | null;
+    } as typeof getContext;
+  });
+  await page.goto("/");
+
+  await expect(page.getByRole("status").filter({ hasText: "3D view isn't available" })).toBeVisible(
+    { timeout: 10_000 },
+  );
+  await expect(page.getByRole("article")).toHaveCount(8);
+  await expect(page.locator("canvas")).toHaveCount(0);
+  await expect(page.locator("html")).not.toHaveAttribute("data-view", "ring");
+});
+
+test("while the scene loads a line says so, without moving the list", async ({ page }) => {
+  await onLazyScripts(page, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await route.continue();
+  });
+  await page.goto("/?tier=low");
+
+  const loading = page.locator('[data-ring-note="loading"]');
+  await expect(loading).toBeVisible();
+  const heading = page.getByRole("heading", { level: 2, name: "Featured projects" });
+  const before = (await heading.boundingBox())!.y;
+  // The line sits out of the flow: the list is where it would be without it.
+  expect(await loading.evaluate((node) => getComputedStyle(node).position)).toBe("absolute");
+  expect((await heading.boundingBox())!.y).toBe(before);
+
+  await expect(page.locator("html")).toHaveAttribute("data-view", "ring", { timeout: 20_000 });
+  await expect(loading).toHaveCount(0);
 });
 
 test("a visitor already reading the list keeps it when the ring arrives late", async ({ page }) => {
