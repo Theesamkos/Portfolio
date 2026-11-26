@@ -38,6 +38,8 @@ export const projectSchema = z
     stack: z.array(z.string().min(1)).readonly(),
     assets: z.strictObject({
       poster: assetPath,
+      /** The small icon on the project's ring panel, e.g. `/projects/math-tiles/icon.svg`. */
+      icon: assetPath,
       screenshots: z.array(assetPath).readonly(),
     }),
     order: z.number().int().positive(),

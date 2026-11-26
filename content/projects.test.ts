@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { projectIdSchema, projects, getProject } from "@/content/projects";
@@ -55,6 +55,20 @@ describe("content/projects", () => {
       expect(existsSync(join(process.cwd(), "public", project.assets.poster))).toBe(true);
     }
   });
+
+  // The icon is drawn on the ring panel as a WebGL texture, so it has to be small,
+  // carry its own pixel size, and pull in nothing from anywhere else.
+  test("every icon is a small, self-contained SVG with a pixel size", () => {
+    for (const project of projects) {
+      expect(project.assets.icon).toBe(`/projects/${project.id}/icon.svg`);
+      const file = join(process.cwd(), "public", project.assets.icon);
+      expect(existsSync(file), project.id).toBe(true);
+      expect(statSync(file).size, project.id).toBeLessThan(4096);
+      const svg = readFileSync(file, "utf8");
+      expect(svg, project.id).toMatch(/^<svg [^>]*width="\d+" height="\d+"/);
+      expect(svg, project.id).not.toMatch(/<script|<image|<foreignObject|href=|url\((?!#)/i);
+    }
+  });
 });
 
 describe("projectSchema", () => {
@@ -69,7 +83,11 @@ describe("projectSchema", () => {
     visibility: "public",
     links: {},
     stack: [],
-    assets: { poster: "/projects/example-project/poster.svg", screenshots: [] },
+    assets: {
+      poster: "/projects/example-project/poster.svg",
+      icon: "/projects/example-project/icon.svg",
+      screenshots: [],
+    },
     order: 1,
   };
   const rejects = (override: Partial<ProjectInput>) =>
