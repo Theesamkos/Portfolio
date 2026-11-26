@@ -2,6 +2,31 @@
 
 Newest first. One entry per architectural choice: context → decision → consequence.
 
+## 2026-11-26 · The bottom sheet's drag is hand-written, with two snap points
+- **Context:** on a phone the detail sheet covered 85% of the screen at once, and its handle was decoration. Sam asked for half height first and full on drag up.
+- **Decision:** no sheet library. The handle is a real button: pointer events with pointer capture write the sheet's height straight to the element while dragging (no React state per move), and a pure function in `lib/sheet.ts` decides where it settles (half, full or closed) from its height and speed at release. Pressing the handle toggles half and full, so it works from a keyboard and a screen reader.
+- **Consequence:** about 60 lines in `DetailPanel.tsx` and no new dependency. The first snap is 55% of the screen: on a small phone that shows the title, the pitch and the start of the bullets, not all three. The sheet always reopens at half height.
+
+## 2026-11-26 · The ring turns on a spring, not plain damping
+- **Context:** Phase 3 eased the ring with exponential damping, which is frame-rate independent but has no velocity: it starts at full speed the moment the target changes and stops dead when a drag lets go.
+- **Decision:** `smoothDamp` in `lib/ring.ts`, a critically damped spring that carries velocity (the SmoothDamp from Game Programming Gems 4), written and unit-tested here instead of adding an animation library.
+- **Consequence:** the ring eases in, keeps a drag's speed on release, cannot overshoot, and lands exactly on its target, so a ring at rest writes no styles. Other eased values (opacity, scale, camera) still use `ease`.
+
+## 2026-11-26 · A software WebGL renderer is capped at the low tier
+- **Context:** with no usable GPU the browser draws WebGL on the CPU. The frame-rate monitor would step down to low eventually, but only after showing several seconds of the slow path.
+- **Decision:** the probe in `RingStage.tsx` reads the renderer name (`WEBGL_debug_renderer_info`, or `RENDERER` where that extension is retired) and `lib/webgl.ts` decides whether it names a CPU renderer. If so the ring starts on low and the ceiling is low. `?tier=` still wins.
+- **Consequence:** a browser that hides the renderer name is treated as a GPU and falls back to the monitor. e2e runs on SwiftShader, so unpinned runs draw the low tier.
+
+## 2026-11-26 · While a project is selected the camera backs off as well as sliding
+- **Context:** selecting a project slid the camera so the ring moved left of the detail panel, but the disc then ran out of the left and bottom of the stage.
+- **Decision:** `activeZoom` in `layout.ts`: the camera also sits 18% further back while a project is selected, and slides further, so the whole disc fits beside the panel. The resting framing was lowered and pulled back so the disc is inside the stage there too.
+- **Consequence:** the ring is smaller while the panel is open, and a little smaller at rest than in Phase 3.
+
+## 2026-11-26 · About is hidden below 1024px
+- **Context:** Sam's phone check: the first screens on a phone should be the projects.
+- **Decision:** the About section is `hidden lg:flex` and the mobile menu drops its link. CSS only, so it is the same with JavaScript off.
+- **Consequence:** phone visitors get no prose about Sam until the AI guide (Phase 5); his name, identity line and contact links are still in the hero.
+
 ## 2026-11-26 · The core sphere is opaque; the panes stay translucent
 - **Context:** the sphere was translucent glass like the panels. In practice the panel behind it showed through as a pale rectangle, and the two directional lights left small sharp highlights on it. The output pass scales colors far above screen white down to keep their hue, so those highlights came out as dark dots. Rectangle plus two dots read as a face.
 - **Decision:** the sphere is an opaque, slightly rough `MeshStandardMaterial` in `--glow`, with a soft gradient sprite behind it for the glow. It writes depth, unlike the rest of the glass.

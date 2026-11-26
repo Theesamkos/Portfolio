@@ -67,14 +67,15 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 - Nav collapses to name + List view + a menu button; Contact me moves into the menu. (The full nav does not fit on one line below about 880px.)
 - Hero stacks; buttons full-width in two rows.
 - Ring becomes a curved swipeable carousel across the full width (three panels visible, center one front); the glass disc and core stay but smaller.
-- Detail panel becomes a bottom sheet (drag handle, 24px top radius) with the same content order. The handle is visual for now; close with ×, Esc or the backdrop.
+- Detail panel becomes a bottom sheet (24px top radius) with the same content order. It has two heights: it opens at half (55% of the screen) and goes to full (92%). The handle at the top is a real button: drag it up for full, down from half to close, or press it to switch between the two. × , Esc and the backdrop also close it.
+- The About section is hidden; the menu has no About link.
 - Ask bar becomes a floating pill button bottom-right that opens a full-screen sheet.
 - Lighter effects tier by default; the reflective floor is off.
 
 ## 3D scene (the ring)
-- **Platform:** a wide glass disc with a visible rim and a soft reflection of the panels below (drei `MeshReflectorMaterial` on high tier; a baked gradient "reflection" on low tier).
+- **Platform:** a wide glass disc with a thin bright rim and a reflection of the panels on its surface (drei `MeshReflectorMaterial` on high tier; a baked gradient "reflection" on medium and low). The whole disc stays in the stage; while a project is selected the camera slides and backs off so the disc sits beside the detail panel.
 - **Core:** a glossy blue sphere at the center, half hidden behind the front panel, with a thin glowing halo ring (torus, emissive `--glow`) around it. The halo leans 6° toward the camera, which already looks down on it by about 9°, so it shows at about 15°: a thin orbit, with its far half hidden behind the sphere. The sphere is opaque and slightly rough, with a soft gradient glow behind it (docs/DECISIONS.md). On the carousel the core sits above the panel tops so the halo stays visible. It is the AI guide's presence: slow idle pulse, brighter while the guide is answering, and a light trace from the core to the matching panel when the guide calls `focusProject` (Phase 5).
-- **Panels:** 8 rounded, near-square glass planes (1.75 × 1.85, 20px radius) on the ring, tilted to face the camera path. The glass is frosted: a blue tint that deepens toward the bottom, thinned on the low tier. Each shows the project's icon as a texture; the index label (`01 / 08`), a status dot in the status chip colors, the title and the pitch are DOM text laid over the pane, not texture. Below 1024px the pitch is left off (the panes are too small). Front panel: scales to 1.12, full opacity, a thin light-blue edge with a soft glow around it and a pool of light on the disc below. Others: 0.9 opacity. (Blur on the other panels is not built — see PLAN "Later".)
+- **Panels:** 8 rounded, near-square glass planes (1.75 × 1.85, 20px radius) on the ring, tilted to face the camera path. The glass is frosted: a blue tint that deepens toward the bottom, thinned on the low tier. Each shows the project's icon as a texture; the index label (`01 / 08`), a status dot in the status chip colors, the title and the pitch are DOM text laid over the pane, not texture. The pitch is `--ink`, not `--ink-dim`: over tinted glass and a moving scene the dim shade fell under 4.5:1. Below 1024px the pitch is left off (the panes are too small). Front panel: scales to 1.12, full opacity, a thin light-blue edge with a soft glow around it and a pool of light on the disc below. Others: 0.9 opacity. (Blur on the other panels is not built — see PLAN "Later".)
 - **Light:** soft studio lighting, a cool key from the top-left, environment map for the glass. Bloom only on the halo and the front panel's edge: the threshold sits above lit glass and only those two are drawn brighter, so the page never looks foggy. The soft glow around the front panel and its pool on the disc are gradient textures, not bloom, so the low tier has them too.
 - **Materials:** transparent `MeshPhysicalMaterial` with clearcoat on high tier; transparent `MeshStandardMaterial` on medium/low. No transmission (docs/DECISIONS.md).
 - **Background:** the DOM page background shows through the transparent canvas; add a few large, very soft blue blobs as DOM gradients behind the canvas, not in WebGL.
@@ -82,11 +83,12 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 ## Motion
 | Interaction | Duration | Easing |
 |---|---|---|
-| Ring step / snap | 600ms | damped (useFrame, delta-based damping on refs — not a fixed-factor lerp, which runs faster on 120Hz screens; no React state per frame) |
+| Ring step / snap | 600ms | a critically damped spring (`smoothDamp` in `lib/ring.ts`, in useFrame on refs): eases in, keeps a drag's speed on release, never overshoots, lands exactly on target. Not a fixed-factor lerp, which runs faster on 120Hz screens; no React state per frame |
 | Camera ease to active panel | 800ms | damped |
-| Detail panel open | 240ms | ease-out, slide 16px + fade |
+| Detail panel open and close | 240ms | ease-out, slide 16px + fade; the sheet's height change uses the same 240ms |
 | Intro | ≤ 1.2s: background glows fade in, ring panels rise 24px and fade in staggered 60ms, name resolves last. Skipped on repeat visits and under reduced motion. No "boot sequence" text. |
-| Hover on panel | 150ms | lift 6px, edge glow |
+| Hover on panel or card | 150ms | lift 6px, edge glow (3D panel) / accent edge (list card) |
+| Hover and press on controls | 150ms | colors ease on hover; the control scales to 0.97 while pressed (`pressable` utility). Chips are labels and have neither |
 `prefers-reduced-motion`: no auto-rotate, no intro, instant camera moves, no stagger.
 
 ## Performance tiers (drei `PerformanceMonitor`)
@@ -96,7 +98,9 @@ Shadows: `0 1px 2px rgba(11,21,38,.06), 0 12px 40px rgba(31,107,255,.10)` on gla
 | Medium | off (baked) | standard | on (half res) | up to 1.5 |
 | Low | off (baked) | standard | off | 1 |
 
-Below 1024px the ceiling is Medium. `?tier=high|medium|low` pins a tier for testing.
+Below 1024px the ceiling is Medium. When WebGL reports a software renderer (SwiftShader, llvmpipe, a software rasterizer) the ring starts on Low and stays there. `?tier=high|medium|low` pins a tier for testing.
+
+While the scene loads, a small "Loading 3D view" line shows above the list; without WebGL, or if the scene fails, a note says the list is what there is. Both sit out of the flow, so the list never moves.
 
 ## Project art
 Each project needs a simple 3D-feeling icon in the reference's style (isometric glass layers, a lens, a network, a wave). Until real art exists, each project has a generated isometric icon, `public/projects/<id>/icon.svg`, in the accent blues (stacked layers, tile grid, network, lens, pose figure, bars, map pin and route, document and check). Phase 7 replaces them. Posters are `public/projects/<id>/poster.webp`, 1600×1000.

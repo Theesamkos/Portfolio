@@ -45,30 +45,33 @@ lib/schema.ts              # Project schema + cross-field rules (no dead or priv
 lib/site.ts                # name, identity line, About copy, nav + contact links (facts from docs/AI_GUIDE.md)
 lib/contrast.ts            # WCAG contrast math; contrast.test.ts holds every text token to AA
 lib/project-position.ts    # "01 / 08" label, shared by server and client components
-lib/ring.ts                # pure ring math: angles, shortest turn, drag snap, key map (unit-tested)
-lib/poster-art.ts          # placeholder poster geometry, shared by the card (inline SVG) and the 3D panel (texture)
+lib/ring.ts                # pure ring math: angles, shortest turn, drag snap, key map, the `smoothDamp` spring (unit-tested)
+lib/poster-art.ts          # placeholder poster geometry for the list card (inline SVG)
+lib/webgl.ts               # names a software (CPU) WebGL renderer; RingStage uses it to start on the low tier
+lib/sheet.ts               # the bottom sheet's snap points and where a drag settles (unit-tested)
 lib/env.schema.ts          # pure Zod env parser; next.config.ts runs it so a bad env fails the build
 lib/env.ts                 # `server-only` + parsed env — the only way app code reads env vars
 lib/security-headers.ts    # response headers + CSP (enforced subset, full policy report-only)
 lib/guide/                 # model.ts, system-prompt.ts, tools.ts, evals.ts
 components/ui/             # primitives, all Server Components: Button, Chip, GlassPanel, MonoLabel, icons (inline SVG)
 components/hud/            # 2D overlay: NavBar, ViewToggle, Hero, ProjectList, ProjectCard, DetailPanel, About, Poster, StatusChip, RingStage (lazy loader for the scene)
-components/scene/          # R3F, all in one lazy chunk: RingScene (root: stage, input, labels), Renderer, Scene, Ring, ProjectPanel, Core, Platform, Lighting, CameraRig, Effects, actions, input, layout
+components/scene/          # R3F, all in one lazy chunk: RingScene (root: stage, input, labels), Renderer, Scene, Ring, ProjectPanel, Core, Platform, Lighting, CameraRig, Effects, actions, input, layout, textures (gradient textures: pane tint, glows)
 store/ui.ts                # Zustand: activeProjectId, frontProjectId, filters, viewMode, ringReady, tier, coreActivity
 e2e/                       # Playwright smoke tests
 .github/workflows/ci.yml   # job `ci`: secret scan, audit, typecheck, lint, format, test, build, e2e
 ```
-As of Phase 3 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions` and `lib/guide/` — those arrive in later phases.
+As of Phase 4 everything exists except `app/projects/[id]`, `app/api/guide`, `app/actions` and `lib/guide/` — those arrive in later phases.
 
 **LCP is hero text.** Posters never get `preload`/eager loading; placeholders are inline SVG and real posters are lazy images. `e2e/home.spec.ts` fails if the LCP element is an image or outside the hero.
 **Project ids:** use the `ProjectId` type (derived from `content/projects.ts`), never a bare `string`.
 **Tokens:** only token colors exist in Tailwind (`--color-*: initial`), so `bg-red-500` generates nothing. Colored *text* uses the `-ink` shades (`text-accent-ink`, `text-live-ink`, `text-warn-ink`); the base `accent` / `live` / `warn` are for fills, dots, borders and icons — they fail AA as small text. `pnpm test` fails if a text token drops below 4.5:1.
+**Hover and press:** every clickable control uses the `pressable` utility (`app/globals.css`): 150ms color easing and a 0.97 scale while pressed. Don't add a second `transition-*` or `active:scale-*` to an element that has it. Chips are labels and get neither.
 **Glass:** build surfaces with `GlassPanel`. Pass `blur={false}` when nothing scrolls behind the pane (cards, About, footer); blur is for the nav, menu and detail panel.
-**Detail panel:** `components/hud/DetailPanel.tsx` is a native `<dialog>` that shows whichever project `activeProjectId` names — open it by calling `focusProject(id)`, never by touching the element. Side panel from 1024px, bottom sheet below. It is modal everywhere except the ring view on desktop (`viewMode === "ring"`), where the ring behind it must stay usable.
-**Ring:** `components/hud/RingStage.tsx` is the only ring code in the first load; it imports `components/scene/RingScene.tsx` with `next/dynamic` after first paint. Never import anything from `components/scene/` (or `three`, R3F, drei) into a first-load file — `import type` only. In ring view the list is hidden by CSS (`html[data-view="ring"]`), not removed. `/?view=list` keeps the ring from loading; `?tier=high|medium|low` pins the effects tier.
+**Detail panel:** `components/hud/DetailPanel.tsx` is a native `<dialog>` that shows whichever project `activeProjectId` names — open it by calling `focusProject(id)`, never by touching the element. Side panel from 1024px, bottom sheet below. The sheet opens at half height and its handle (a real button) drags or toggles it to full; the heights and the snap rule live in `lib/sheet.ts`. It closes with a 240ms exit, so tests should wait for it to be hidden, not assume it is gone at once. It is modal everywhere except the ring view on desktop (`viewMode === "ring"`), where the ring behind it must stay usable.
+**Ring:** `components/hud/RingStage.tsx` is the only ring code in the first load; it imports `components/scene/RingScene.tsx` with `next/dynamic` after first paint. Never import anything from `components/scene/` (or `three`, R3F, drei) into a first-load file — `import type` only. In ring view the list is hidden by CSS (`html[data-view="ring"]`), not removed. `/?view=list` keeps the ring from loading; `?tier=high|medium|low` pins the effects tier. A software WebGL renderer starts and stays on `low` (e2e runs on one, so pin `?tier=high` to test the full pipeline); the canvas wrapper carries `data-tier`.
 **Front vs selected:** `frontProjectId` is the panel at the front of the ring; `activeProjectId` is the selection that opens the detail panel. Turning the ring calls `setFrontProject`; selecting calls `focusProject`, which also brings that project to the front. Route ring input through `components/scene/actions.ts`.
 **Render loop:** anything that changes per frame is written to refs or to the mutable `ringInput` object in `useFrame`, damped with the frame's `delta`, and reads the store with `getState()`. Panel text is DOM (labels in `RingScene`, positioned by `ProjectPanel`), never a texture.
-**Bloom:** the threshold (`BLOOM_THRESHOLD` in `Effects.tsx`) sits above lit glass. A new material brighter than that will glow; keep `PremultipliedOutput` last in the composer or translucent surfaces turn white on the transparent canvas.
+**Bloom:** the threshold (`BLOOM_THRESHOLD` in `Effects.tsx`) sits above lit glass. A new material brighter than that will glow; keep `PremultipliedOutput` last in the composer or translucent surfaces turn white on the transparent canvas. Soft light (pane tint, the glow around the front panel, its pool on the disc, the core's glow) is a gradient texture from `components/scene/textures.ts`, not bloom, so every tier has it. A sharp highlight brighter than about 1.5 comes out as a dark dot; keep glossy materials rough enough to stay under it.
 **Client components get data as props.** Never import `content/projects.ts` at runtime from a `"use client"` file (it would ship Zod to the browser); `import type` is fine.
 **Store:** `store/ui.ts` is a module singleton — import it only from client components. Server Components read `content/projects.ts` directly.
 
