@@ -51,7 +51,7 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 
 ## Phase 4 — Polish pass on the look
 **Lesson:** the last 10% is where "nice" becomes "what?!".
-- [ ] Diff against the reference fixed in order of visual impact — built: near-square frosted cyan-blue panes with icon, pitch and status dot; soft glowing front edge with a pool of light on the disc; halo as an orbit; opaque sphere half behind the front panel; panel reflections on the disc (high tier); disc in frame at rest and when selected. Judged by eye from `docs/screenshots/phase-4/`, no automated visual test. Open: Sam's side-by-side verdict and real phone check
+- [x] Diff against the reference fixed in order of visual impact — built: near-square frosted cyan-blue panes with icon, pitch and status dot; soft glowing front edge with a pool of light on the disc; halo as an orbit; opaque sphere half behind the front panel; panel reflections on the disc (high tier); disc in frame at rest and when selected. Judged by eye from `docs/screenshots/phase-4/`, no automated visual test. Sam's real phone check passed on 2026-11-26 (the sheet opens at the title) and he asked for the box to be ticked
 - [x] Hover/press states; ring damping tuned; detail panel motion — `pressable` utility at 150ms (e2e: button scales to 0.97 while pressed, card lifts 6px); ring on a critically damped spring (7 unit tests: 60/120Hz, no overshoot, exact rest); panel closes over 240ms (sampled: opacity 1 → 0 in about 250ms, content kept). The sheet has half and full snap points with a draggable handle (e2e)
 - [x] Placeholder project icons in the reference style — 8 isometric SVGs, each under 4 KB (unit test)
 - [x] Loading and no-WebGL fallback states — e2e: loading line while the chunk is delayed, note with WebGL disabled and when the chunk fails, nothing with `?view=list`
@@ -84,9 +84,8 @@ Work one phase at a time on its own branch (`phase/<n>-<name>`). Exact prompts a
 ## Handoff
 _(updated at the end of each session)_
 
-**2026-11-26 — Phase 4 built on `phase/4-polish`, waiting on Sam's side-by-side verdict and phone check.** Phases 1, 2, 2.5 and 3 are merged.
-- **Sam — to close Phase 4:** compare `docs/screenshots/phase-4/after-*.webp` (or the preview) with the two reference images, then on a real phone: open a project (the sheet should open at the top, at half height), drag the handle up and down, check the three panes fit the screen, and that About is gone. Then tick the first Phase 4 box.
-- **Sam — the sheet opening scrolled down:** not reproduced in Chromium or WebKit phone emulation, including after scrolling, closing and reopening. A guard is in (scroll reset after the dialog opens, `preventScroll` on focus moves, always reopens at half height). Only a real phone can confirm it is gone.
+**2026-11-26 — Phase 4 complete on `phase/4-polish` (PR #10), waiting on Sam's merge.** Phases 1, 2, 2.5 and 3 are merged. Next: Phase 5, the AI guide.
+- **Phase 4 is closed:** Sam's real phone check passed on 2026-11-26, and the sheet opens at the title. The "sheet opens scrolled down" report was never reproduced in Chromium or WebKit emulation, so which of the guards fixed it is not known (scroll reset after the dialog opens, `preventScroll` on focus moves, always reopening at half height).
 - **Sam — securityheaders.com (A or better):** still open from Phase 1.
 - **Layout shift in ring view, fixed:** the ring used to mount at zero height and take the list's place, which Lighthouse scored at CLS 0.44 (mobile) and 0.51 (desktop), performance 46 and 62. Its slot is now in the server HTML at full height and the list fades out under it. Lighthouse on the production build, ring view: CLS 0 on both; performance 97 mobile, 100 desktop; accessibility 100. List view: 100 / 100, CLS 0. Lighthouse ran in headless Chrome, which draws the ring in software on the low tier. The "before" figures were measured on this branch before the fix, not on `main`.
 - **Checks:** typecheck and lint clean; 172 unit tests; 53 e2e tests. e2e runs WebGL in software, so it proves behavior, not speed.
