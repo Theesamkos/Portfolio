@@ -171,8 +171,10 @@ test.describe("list view with JavaScript disabled", () => {
     const menu = page.getByRole("navigation", { name: "Menu" });
     await expect(menu).toBeHidden();
     await page.getByRole("button", { name: "Menu" }).click();
-    await expect(menu.getByRole("link", { name: "About" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Resume" })).toBeVisible();
     await expect(menu.getByRole("link", { name: "Contact me" })).toBeVisible();
+    // About is hidden below 1024px with CSS alone, so also without JavaScript.
+    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeHidden();
   });
 });
 
@@ -225,15 +227,18 @@ test.describe("nav bar", () => {
 
     await menuButton.click();
     const menu = page.getByRole("navigation", { name: "Menu" });
-    for (const name of ["Projects", "About", "Resume", "Contact"]) {
+    for (const name of ["Projects", "Resume", "Contact"]) {
       await expect(menu.getByRole("link", { name, exact: true })).toBeVisible();
     }
     await expect(menu.getByRole("link", { name: "Contact me" })).toBeVisible();
+    // About is a desktop section: no link to it, and it is not on the page here.
+    await expect(menu.getByRole("link", { name: "About" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeHidden();
 
     // Following a link closes the menu and lands on the section.
-    await menu.getByRole("link", { name: "About" }).click();
+    await menu.getByRole("link", { name: "Contact", exact: true }).click();
     await expect(menu).toBeHidden();
-    await expect(page.getByRole("heading", { level: 2, name: "About" })).toBeInViewport();
+    await expect(page.getByRole("heading", { level: 2, name: "Contact" })).toBeInViewport();
   });
 });
 
@@ -336,6 +341,78 @@ for (const viewport of [
       await expect(dialog).toBeHidden();
       await expect(page.getByRole("button", { name: "Details: ChatBridge" })).toBeFocused();
     });
+
+    if (viewport.sheet) {
+      test("the sheet opens at the top, at half height, and its handle expands it", async ({
+        page,
+      }) => {
+        await page.goto(LIST);
+        await page.getByRole("button", { name: "Details: Software Factory" }).click();
+        const dialog = page.getByRole("dialog");
+        const height = async () => (await dialog.boundingBox())!.height / viewport.height;
+
+        // Title and pitch are in view and the content has not been scrolled.
+        await expect(dialog.getByRole("heading", { level: 2 })).toBeInViewport();
+        await expect(dialog.getByText("A pipeline that turns a written spec")).toBeInViewport();
+        expect(
+          await dialog
+            .locator("> div")
+            .first()
+            .evaluate((node) => node.scrollTop),
+        ).toBe(0);
+        await expect.poll(height).toBeCloseTo(0.55, 1);
+
+        // The handle is a button: pressing it switches between half and full.
+        const handle = dialog.getByRole("button", { name: "Expand project details" });
+        await expect(handle).toHaveAttribute("aria-expanded", "false");
+        await handle.press("Enter");
+        await expect.poll(height).toBeCloseTo(0.92, 1);
+        await expect(
+          dialog.getByRole("button", { name: "Collapse project details" }),
+        ).toHaveAttribute("aria-expanded", "true");
+
+        // Scrolled down, closed and opened again: back at the top and at half height.
+        await dialog
+          .locator("> div")
+          .first()
+          .evaluate((node) => (node.scrollTop = 9999));
+        await page.keyboard.press("Escape");
+        await page.getByRole("button", { name: "Details: Software Factory" }).click();
+        await expect.poll(height).toBeCloseTo(0.55, 1);
+        expect(
+          await dialog
+            .locator("> div")
+            .first()
+            .evaluate((node) => node.scrollTop),
+        ).toBe(0);
+      });
+
+      test("dragging the handle up expands the sheet; dragging it down closes it", async ({
+        page,
+      }) => {
+        await page.goto(LIST);
+        await page.getByRole("button", { name: "Details: Software Factory" }).click();
+        const dialog = page.getByRole("dialog");
+        const height = async () => (await dialog.boundingBox())!.height / viewport.height;
+        await expect.poll(height).toBeCloseTo(0.55, 1);
+
+        const dragHandle = async (name: string, distance: number) => {
+          const box = (await dialog.getByRole("button", { name }).boundingBox())!;
+          const x = box.x + box.width / 2;
+          const y = box.y + box.height / 2;
+          await page.mouse.move(x, y);
+          await page.mouse.down();
+          await page.mouse.move(x, y + distance / 2, { steps: 4 });
+          await page.mouse.move(x, y + distance, { steps: 4 });
+          await page.mouse.up();
+        };
+
+        await dragHandle("Expand project details", -260);
+        await expect.poll(height).toBeCloseTo(0.92, 1);
+        await dragHandle("Collapse project details", 620);
+        await expect(dialog).toBeHidden();
+      });
+    }
 
     test("Previous and Next stay put from project to project", async ({ page }) => {
       await page.goto(LIST);

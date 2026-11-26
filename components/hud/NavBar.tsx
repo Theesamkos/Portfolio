@@ -7,6 +7,9 @@ import { ViewToggle } from "./ViewToggle";
 
 const MENU_ID = "site-menu";
 
+/** The menu only shows below 1024px, where the About section is hidden. */
+const menuLinks = navLinks.filter(({ href }) => href !== "#about");
+
 const linkClass =
   "text-ink hover:text-accent-ink duration-hover inline-flex min-h-11 items-center px-1 text-base font-medium transition-colors";
 
@@ -67,7 +70,7 @@ export function NavBar() {
       <NavMenu id={MENU_ID}>
         <nav aria-label="Menu">
           <ul role="list" className="flex flex-col">
-            {navLinks.map(({ label, href }) => (
+            {menuLinks.map(({ label, href }) => (
               <li key={label}>
                 <a href={href} className={`${linkClass} w-full px-3`}>
                   {label}
