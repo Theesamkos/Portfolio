@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { ExtrudeGeometry, PlaneGeometry, ShapeGeometry, type Group } from "three";
 import type { ProjectId } from "@/content/projects";
+import type { ProjectStatus } from "@/lib/schema";
 import { dampingFor, rotationFor } from "@/lib/ring";
 import { useUiStore, type Tier } from "@/store/ui";
 import { fitUvs, roundedFrame, roundedRect } from "./geometry";
@@ -14,7 +15,15 @@ import { edgeAura, paneTint } from "./textures";
 import type { SceneTokens } from "./tokens";
 
 /** What the ring needs to know about a project — the page passes only this. */
-export type RingProject = { id: ProjectId; title: string; order: number };
+export type RingProject = {
+  id: ProjectId;
+  title: string;
+  pitch: string;
+  status: ProjectStatus;
+  order: number;
+  /** Site-relative path of the panel's icon, e.g. `/projects/math-tiles/icon.svg`. */
+  icon: string;
+};
 
 /** While dragging, the ring should stick to the pointer. */
 const DRAG_RATE = dampingFor(0.08);
@@ -48,7 +57,8 @@ export function Ring({
   // One set of geometry shared by all panels.
   const geometry = useMemo<PanelGeometry>(() => {
     const { panelWidth: width, panelHeight: height, panelRadius: radius } = layout;
-    const art = width * 0.72;
+    // The icon sits between the index label and the title, about half the pane high.
+    const art = height * 0.5;
     return {
       glass: new ExtrudeGeometry(roundedRect(width, height, radius), {
         depth: 0.02,
@@ -112,7 +122,7 @@ export function Ring({
         <ProjectPanel
           key={project.id}
           id={project.id}
-          order={project.order}
+          icon={project.icon}
           index={index}
           count={count}
           layout={layout}

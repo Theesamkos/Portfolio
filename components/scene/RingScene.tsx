@@ -27,6 +27,13 @@ import { readSceneTokens } from "./tokens";
 const DESKTOP = "(min-width: 1024px)";
 const INTRO_KEY = "ring-intro-seen";
 
+/** The dot in a panel's corner: the same colors as the status chips (docs/DESIGN.md). */
+const STATUS_DOT: Record<RingProject["status"], string> = {
+  live: "bg-live",
+  video: "bg-accent",
+  "coming-soon": "bg-warn",
+};
+
 /** `?tier=low|medium|high` pins the effects tier — for testing and measuring. */
 function tierFromUrl(): Tier | null {
   const value = new URLSearchParams(window.location.search).get("tier");
@@ -296,16 +303,28 @@ export default function RingScene({ projects }: { projects: readonly RingProject
               ref={(node) => {
                 ringLabels[index] = node;
               }}
-              className="text-ink absolute top-0 left-0 flex origin-top-left flex-col justify-between p-3 opacity-0 select-none"
+              className="text-ink absolute top-0 left-0 flex origin-top-left flex-col justify-between p-3 opacity-0 select-none lg:p-4"
               style={{
                 width: layout.labelWidth,
                 height: (layout.labelWidth * layout.panelHeight) / layout.panelWidth,
               }}
             >
-              <span className="tracking-readout text-ink-dim font-mono text-xs">
-                {projectPosition(project.order, count)}
+              <span className="flex items-center justify-between">
+                <span className="tracking-readout text-ink-dim font-mono text-xs">
+                  {projectPosition(project.order, count)}
+                </span>
+                <span className={`size-2.5 rounded-full ${STATUS_DOT[project.status]}`} />
               </span>
-              <span className="text-base leading-tight font-bold lg:text-lg">{project.title}</span>
+              <span className="flex flex-col gap-1">
+                <span className="text-base leading-tight font-bold lg:text-lg">
+                  {project.title}
+                </span>
+                {/* The carousel's panes are too small for a second line of text; there
+                    the pitch is one tap away, in the sheet. */}
+                <span className="text-ink-dim hidden text-xs leading-snug lg:block">
+                  {project.pitch}
+                </span>
+              </span>
             </div>
           ))}
         </div>
